@@ -17,6 +17,21 @@ public class Utilidades : MonoBehaviour
         
     }
 
+    public void cambarEscenaMenuTableros()
+    {
+        SceneManager.LoadScene("MenuTableros");
+    }
+
+    public void cambarEscenaModosDeJuegos()
+    {
+        SceneManager.LoadScene("ModosDeJuego");
+    }
+
+    public void cambarEscenaMenuUsuarios()
+    {
+        SceneManager.LoadScene("MenuUsuarios");
+    }
+
     public void cambarEscena()
     {
         SceneManager.LoadScene("");
