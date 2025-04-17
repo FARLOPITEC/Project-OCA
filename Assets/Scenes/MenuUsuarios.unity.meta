@@ -1,5 +1,9 @@
 fileFormatVersion: 2
+<<<<<<<< HEAD:Assets/Scenes/MenuUsuarios.unity.meta
 guid: df08a32fb6407ea4c9c75193b347418c
+========
+guid: 3fe7f49864db35c419623c5112a65cd1
+>>>>>>>> Tablero:Assets/Unity-UI-Rounded-Corners-master/Examples/example.unity.meta
 DefaultImporter:
   externalObjects: {}
   userData: 
