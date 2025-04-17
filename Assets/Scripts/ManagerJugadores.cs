@@ -13,6 +13,7 @@ public class ManagerJugadores : MonoBehaviour
     //Principal jugadores
     public GameObject contenedor;
     //Popup
+    public TMP_Text tituloPopup;
     public GameObject popupJugador;
     public GameObject contenedorColores;
     public Image colorElegido;
@@ -22,7 +23,7 @@ public class ManagerJugadores : MonoBehaviour
     string ruta="";
     //Popup Advertencia
     public GameObject popupAdvertenvia;
-    public TMP_Text titulo;
+    public TMP_Text tituloPopupAdvertencia;
     public TMP_Text problema;
 
     //Generales
@@ -90,6 +91,7 @@ public class ManagerJugadores : MonoBehaviour
             jugadores.Add(jugador.Nombre, jugador);
             AñadirIcono(jugador.Nombre,jugador.RutaImagen);
             numJugadores++;
+            tituloPopup.text = "Jugador " + numJugadores;
             popupJugador.gameObject.SetActive(false);
             ReiniciarPopup();
 
@@ -317,28 +319,28 @@ public class ManagerJugadores : MonoBehaviour
         if (ju.Nombre.Equals(""))
         {
 
-            titulo.text = "Error Nombre";
+            tituloPopupAdvertencia.text = "Error Nombre";
             problema.text = "No has introducido un nombre";
             
 
         }
         else if (ju.RutaImagen.Equals(""))
         {
-            titulo.text = "Error Imagen";
+            tituloPopupAdvertencia.text = "Error Imagen";
             problema.text = "No has elegido una imagen";
 
 
         }
         else if (ju.ColorIcono == blanco)
         {
-            titulo.text = "Error Color";
+            tituloPopupAdvertencia.text = "Error Color";
             problema.text = "No has elegido un color";
 
 
         }
         else if (encontrado)
         {
-            titulo.text = "Error Nombre";
+            tituloPopupAdvertencia.text = "Error Nombre";
             problema.text = "Ese nombre ya lo has elegido";
 
 
