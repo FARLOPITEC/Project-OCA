@@ -1,5 +1,9 @@
 fileFormatVersion: 2
+<<<<<<<< HEAD:Assets/proyetoOCA.unity.meta
 guid: 2ffa9e71782937f428ad17dd4a5f7850
+========
+guid: 3fe7f49864db35c419623c5112a65cd1
+>>>>>>>> Tablero:Assets/Unity-UI-Rounded-Corners-master/Examples/example.unity.meta
 DefaultImporter:
   externalObjects: {}
   userData: 
