@@ -17,9 +17,9 @@ public class Utilidades : MonoBehaviour
         
     }
 
-    public void cambarEscenaMenuTableros()
+    public void cambarEscenaMenuUsuarios()
     {
-        SceneManager.LoadScene("MenuTableros");
+        SceneManager.LoadScene("MenuUsuarios");
     }
 
     public void cambarEscenaModosDeJuegos()
@@ -27,10 +27,14 @@ public class Utilidades : MonoBehaviour
         SceneManager.LoadScene("MenuModosDeJuego");
     }
 
-    public void cambarEscenaMenuUsuarios()
+    public void cambarEscenaMenuTableros()
     {
-        SceneManager.LoadScene("MenuUsuarios");
+        SceneManager.LoadScene("MenuTableros");
     }
+
+    
+
+    
 
     public void cambarEscena()
     {
