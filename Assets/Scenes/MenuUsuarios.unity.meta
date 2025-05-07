@@ -1,5 +1,9 @@
 fileFormatVersion: 2
-guid: df08a32fb6407ea4c9c75193b347418c
+<<<<<<<< HEAD:Assets/Scenes/MenuTableros.unity.meta
+guid: 4cd9876ab37f75d448bc1b23027e273e
+========
+guid: e3b68b0829fd06b4b857310a90571064
+>>>>>>>> Tablero:Assets/Scenes/Ventana Jugadores.unity.meta
 DefaultImporter:
   externalObjects: {}
   userData: 

@@ -24,7 +24,7 @@ public class Utilidades : MonoBehaviour
 
     public void cambarEscenaModosDeJuegos()
     {
-        SceneManager.LoadScene("ModosDeJuego");
+        SceneManager.LoadScene("MenuModosDeJuego");
     }
 
     public void cambarEscenaMenuUsuarios()
