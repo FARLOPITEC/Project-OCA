@@ -20,7 +20,7 @@ public class ManagerJugadores : MonoBehaviour
     public Image imagenElegida;
     public GameObject imagenNoImagen;
     public TMP_InputField inputNombre;
-    string ruta="";
+    string rutaDef="";
     //Popup Advertencia
     public GameObject popupAdvertenvia;
     public TMP_Text tituloPopupAdvertencia;
@@ -70,7 +70,7 @@ public class ManagerJugadores : MonoBehaviour
     public void BotonConfirmar()
     {
 
-        Jugador jugador = new Jugador(inputNombre.text, ruta , colorElegido.color,"FichaCorazon", 0);
+        Jugador jugador = new Jugador(inputNombre.text, rutaDef, colorElegido.color,"FichaCorazon", 0);
         ColorUtility.TryParseHtmlString("#FFFFFF", out Color blanco);
 
 
@@ -118,7 +118,7 @@ public class ManagerJugadores : MonoBehaviour
         ColorUtility.TryParseHtmlString("#6756C1", out Color lila);
         imagenElegida.color = lila;
         imagenNoImagen.SetActive(true);
-        ruta = "";
+        rutaDef = "";
 
         foreach (Transform child in contenedorColores.transform)
         {
@@ -233,7 +233,7 @@ public class ManagerJugadores : MonoBehaviour
     }
     //Elegir Imagen Popup
 
-    void ElegirImagen()
+    public void ElegirImagen()
     {
         
         //noImagen.gameObject.SetActive(false);
@@ -242,8 +242,8 @@ public class ManagerJugadores : MonoBehaviour
         {
             if (!string.IsNullOrEmpty(path))
             {
-                ruta = path;
-                CambiarImagenJugador(imagenElegida.gameObject, ruta);
+                rutaDef = path;
+                CambiarImagenJugador(imagenElegida.gameObject, rutaDef);
             }
             else
             {
