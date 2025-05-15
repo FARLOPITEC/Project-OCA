@@ -8,13 +8,13 @@ public class Utilidades : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
-        
+
     }
 
     // Update is called once per frame
     void Update()
     {
-        
+
     }
 
     public void cambarEscenaMenuUsuarios()
@@ -37,9 +37,9 @@ public class Utilidades : MonoBehaviour
         SceneManager.LoadScene("MenuMiniJuegos");
     }
 
-    public void cambarEscena1()
+    public void cambarEscenaMiniJuegoVerdadReto()
     {
-        SceneManager.LoadScene("");
+        SceneManager.LoadScene("MiniJuegoVerdadReto");
     }
 
     public void cambarEscena2()
@@ -51,4 +51,16 @@ public class Utilidades : MonoBehaviour
     {
         SceneManager.LoadScene("");
     }
+
+    public void cambarEscena4()
+    {
+        SceneManager.LoadScene("");
+    }
+
+    public void cambarEscena5()
+    {
+        SceneManager.LoadScene("");
+
+    }
+
 }
