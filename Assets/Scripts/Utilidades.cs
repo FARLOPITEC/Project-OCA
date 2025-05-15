@@ -32,11 +32,22 @@ public class Utilidades : MonoBehaviour
         SceneManager.LoadScene("MenuTableros");
     }
 
-    
+    public void cambarEscenaMenuMiniJuegos()
+    {
+        SceneManager.LoadScene("MenuMiniJuegos");
+    }
 
-    
+    public void cambarEscena1()
+    {
+        SceneManager.LoadScene("");
+    }
 
-    public void cambarEscena()
+    public void cambarEscena2()
+    {
+        SceneManager.LoadScene("");
+    }
+
+    public void cambarEscena3()
     {
         SceneManager.LoadScene("");
     }
