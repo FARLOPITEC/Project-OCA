@@ -1,7 +1,6 @@
+using System.Collections;
 using System.Collections.Generic;
-using System.IO;
 using UnityEngine;
-using UnityEngine.UI;
 using TMPro;
 
 public class VerdadORetoManager : MonoBehaviour
@@ -14,16 +13,27 @@ public class VerdadORetoManager : MonoBehaviour
     public TextMeshProUGUI txtCartaVerdad;
     public TextMeshProUGUI txtCartaReto;
 
-
     private List<string> preguntasVerdad = new List<string>();
     private List<string> preguntasReto = new List<string>();
+
+    private RectTransform cartaVerdadRect;
+    private RectTransform cartaRetoRect;
+
+    private float duracion = 0.4f;
+    private Vector2 centro = Vector2.zero;
+    private Vector2 derecha = new Vector2(2000, 0);
+    private Vector2 izquierda = new Vector2(-2000, 0);
+
+    private bool bloqueado = false;
 
     private void Start()
     {
         CargarCSV("CSV/verdad", preguntasVerdad);
         CargarCSV("CSV/reto", preguntasReto);
 
-        // Ocultamos ambas cartas al inicio
+        cartaVerdadRect = cartaVerdad.GetComponent<RectTransform>();
+        cartaRetoRect = cartaReto.GetComponent<RectTransform>();
+
         cartaVerdad.SetActive(false);
         cartaReto.SetActive(false);
     }
@@ -49,23 +59,78 @@ public class VerdadORetoManager : MonoBehaviour
 
     public void MostrarVerdad()
     {
-        if (preguntasVerdad.Count == 0) return;
-
-        cartaVerdad.SetActive(true);
-        cartaReto.SetActive(false);
-
-        int index = Random.Range(0, preguntasVerdad.Count);
-        txtCartaVerdad.text = preguntasVerdad[index];
+        if (bloqueado || preguntasVerdad.Count == 0) return;
+        StartCoroutine(AnimarCarta("verdad"));
     }
 
     public void MostrarReto()
     {
-        if (preguntasReto.Count == 0) return;
+        if (bloqueado || preguntasReto.Count == 0) return;
+        StartCoroutine(AnimarCarta("reto"));
+    }
 
-        cartaVerdad.SetActive(false);
-        cartaReto.SetActive(true);
+    private IEnumerator AnimarCarta(string tipo)
+    {
+        bloqueado = true;
 
-        int index = Random.Range(0, preguntasReto.Count);
-        txtCartaReto.text = preguntasReto[index];
+        if (tipo == "verdad")
+        {
+            int index = Random.Range(0, preguntasVerdad.Count);
+            txtCartaVerdad.text = preguntasVerdad[index];
+
+            if (cartaVerdad.activeSelf)
+            {
+                LeanTween.move(cartaVerdadRect, derecha, duracion).setOnComplete(() =>
+                {
+                    cartaVerdadRect.anchoredPosition = izquierda;
+                    LeanTween.move(cartaVerdadRect, centro, duracion);
+                });
+            }
+            else
+            {
+                if (cartaReto.activeSelf)
+                {
+                    LeanTween.move(cartaRetoRect, derecha, duracion).setOnComplete(() =>
+                    {
+                        cartaReto.SetActive(false);
+                    });
+                }
+
+                cartaVerdad.SetActive(true);
+                cartaVerdadRect.anchoredPosition = izquierda;
+                LeanTween.move(cartaVerdadRect, centro, duracion);
+            }
+        }
+        else if (tipo == "reto")
+        {
+            int index = Random.Range(0, preguntasReto.Count);
+            txtCartaReto.text = preguntasReto[index];
+
+            if (cartaReto.activeSelf)
+            {
+                LeanTween.move(cartaRetoRect, derecha, duracion).setOnComplete(() =>
+                {
+                    cartaRetoRect.anchoredPosition = izquierda;
+                    LeanTween.move(cartaRetoRect, centro, duracion);
+                });
+            }
+            else
+            {
+                if (cartaVerdad.activeSelf)
+                {
+                    LeanTween.move(cartaVerdadRect, derecha, duracion).setOnComplete(() =>
+                    {
+                        cartaVerdad.SetActive(false);
+                    });
+                }
+
+                cartaReto.SetActive(true);
+                cartaRetoRect.anchoredPosition = izquierda;
+                LeanTween.move(cartaRetoRect, centro, duracion);
+            }
+        }
+
+        yield return new WaitForSeconds(1f);
+        bloqueado = false;
     }
 }
