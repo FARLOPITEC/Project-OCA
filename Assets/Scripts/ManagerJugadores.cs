@@ -85,7 +85,7 @@ public class ManagerJugadores : MonoBehaviour
             
         }
 
-        if (!jugador.Nombre.Equals("") && jugador.RutaImagen!="" && jugador.ColorIcono!= blanco && !encontrado)
+        if (!jugador.Nombre.Equals("") && jugador.RutaImagen != "" && jugador.ColorIcono!= blanco && !encontrado)
         {
 
             jugadores.Add(jugador.Nombre, jugador);
@@ -107,7 +107,7 @@ public class ManagerJugadores : MonoBehaviour
     public void BotonElegirImagen()
     {
 
-       ruta = ElegirImagen();
+       ElegirImagen();
 
     }
 
@@ -233,9 +233,9 @@ public class ManagerJugadores : MonoBehaviour
     }
     //Elegir Imagen Popup
 
-    string ElegirImagen()
+    void ElegirImagen()
     {
-        string ruta = "";
+        
         //noImagen.gameObject.SetActive(false);
 
         NativeFilePicker.PickFile((path) =>
@@ -253,7 +253,7 @@ public class ManagerJugadores : MonoBehaviour
 
         }, new string[] { "image/*" }// Prueba con un solo formato
 );
-        return ruta;
+        
     }
     void CambiarImagenJugador(GameObject prefab, string path)
     {
@@ -324,7 +324,7 @@ public class ManagerJugadores : MonoBehaviour
             
 
         }
-        else if (ju.RutaImagen.Equals(""))
+        else if (ju.RutaImagen != "")
         {
             tituloPopupAdvertencia.text = "Error Imagen";
             problema.text = "No has elegido una imagen";
