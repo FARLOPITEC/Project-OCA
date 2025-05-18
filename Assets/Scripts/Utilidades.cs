@@ -57,9 +57,9 @@ public class Utilidades : MonoBehaviour
         SceneManager.LoadScene("MiniJuegoQuienFue");
     }
 
-    public void cambarEscena3()
+    public void cambarEscenaMiniJuegoBotella()
     {
-        SceneManager.LoadScene("");
+        SceneManager.LoadScene("MiniJuegoBotella");
     }
 
     public void cambarEscena4()
