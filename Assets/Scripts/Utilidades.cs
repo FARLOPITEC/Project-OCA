@@ -42,9 +42,9 @@ public class Utilidades : MonoBehaviour
         SceneManager.LoadScene("MiniJuegoVerdadReto");
     }
 
-    public void cambarEscena2()
+    public void cambarEscenaMiniJuegoYoNunca()
     {
-        SceneManager.LoadScene("");
+        SceneManager.LoadScene("MiniJuegoYoNunca");
     }
 
     public void cambarEscena3()
