@@ -47,6 +47,16 @@ public class Utilidades : MonoBehaviour
         SceneManager.LoadScene("MiniJuegoYoNunca");
     }
 
+    public void cambarEscenaMiniJuegoMasProbable()
+    {
+        SceneManager.LoadScene("MiniJuegoMasProbable");
+    }
+
+    public void cambarEscenaMiniJuegoQuienFue()
+    {
+        SceneManager.LoadScene("MiniJuegoQuienFue");
+    }
+
     public void cambarEscena3()
     {
         SceneManager.LoadScene("");
@@ -60,7 +70,6 @@ public class Utilidades : MonoBehaviour
     public void cambarEscena5()
     {
         SceneManager.LoadScene("");
-
     }
 
 }
