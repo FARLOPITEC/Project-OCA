@@ -30,6 +30,9 @@ EditorBuildSettings:
     path: Assets/Scenes/MiniJuegoQuienFue.unity
     guid: 41b372252e777844ea9e816e945f63a6
   - enabled: 1
+    path: Assets/Scenes/MiniJuegoBotella.unity
+    guid: fb4edcbba5eb9b24fa07b6ccd81d98fc
+  - enabled: 1
     path: Assets/Scenes/Tablero 2D.unity
     guid: 4fedaa17af06dd440a6789022f8f28ad
   m_configObjects: {}
