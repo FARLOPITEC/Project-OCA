@@ -72,4 +72,17 @@ public class Utilidades : MonoBehaviour
         SceneManager.LoadScene("");
     }
 
+    public void MostrarPopup(GameObject popup)
+    {
+        if (popup != null)
+            popup.SetActive(true);
+    }
+
+    public void OcultarPopup(GameObject popup)
+    {
+        if (popup != null)
+            popup.SetActive(false);
+    }
+
+
 }
