@@ -6,6 +6,9 @@ EditorBuildSettings:
   serializedVersion: 2
   m_Scenes:
   - enabled: 1
-    path: Assets/Scenes/SelecionJuegos.unity
-    guid: 99c9720ab356a0642a771bea13969a05
+    path: Assets/Scenes/Ventana Jugadores.unity
+    guid: e3b68b0829fd06b4b857310a90571064
+  - enabled: 1
+    path: Assets/Scenes/GenerarTablero.unity
+    guid: 502c519be5f1b3e4aab87a7da3cdff47
   m_configObjects: {}
