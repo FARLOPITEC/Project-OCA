@@ -5,10 +5,9 @@ using TMPro;
 
 public class CartasManager : MonoBehaviour
 {
-    [Header("Elementos de la carta")]
-    public GameObject carta;                  // Objeto de la carta
-    public TextMeshProUGUI textoCarta;        // Texto dentro de la carta
-    public TextAsset archivoCSV;              // CSV con las frases
+    public GameObject carta;                  
+    public TextMeshProUGUI textoCarta;        
+    public TextAsset archivoCSV;              
 
     private List<string> frases = new List<string>();
     private RectTransform cartaRect;

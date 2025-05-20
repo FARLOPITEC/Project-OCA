@@ -5,11 +5,9 @@ using TMPro;
 
 public class VerdadORetoManager : MonoBehaviour
 {
-    [Header("Cartas")]
     public GameObject cartaVerdad;
     public GameObject cartaReto;
 
-    [Header("Textos")]
     public TextMeshProUGUI txtCartaVerdad;
     public TextMeshProUGUI txtCartaReto;
 
