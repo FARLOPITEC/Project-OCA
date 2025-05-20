@@ -1,5 +1,9 @@
 fileFormatVersion: 2
+<<<<<<<< HEAD:Assets/Scenes/MenuMiniJuegos.unity.meta
 guid: a9821bbee5727f54aab5d0cdf91a4ccd
+========
+guid: 1b8d251f9af63b746bf2f7ffe00ebb9b
+>>>>>>>> origin/Tablero:Assets/TextMesh Pro/Documentation/TextMesh Pro User Guide 2016.pdf.meta
 DefaultImporter:
   externalObjects: {}
   userData: 

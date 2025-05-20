@@ -1,5 +1,9 @@
 fileFormatVersion: 2
+<<<<<<<< HEAD:Assets/Scenes/MiniJuegoBotella.unity.meta
 guid: fb4edcbba5eb9b24fa07b6ccd81d98fc
+========
+guid: 3fe7f49864db35c419623c5112a65cd1
+>>>>>>>> origin/Tablero:Assets/Unity-UI-Rounded-Corners-master/Examples/example.unity.meta
 DefaultImporter:
   externalObjects: {}
   userData: 

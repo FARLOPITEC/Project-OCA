@@ -1,10 +1,12 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
-
+using System.IO;
 using TMPro;
+//using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.Rendering;
+using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
 
@@ -20,7 +22,7 @@ public class ManagerJugadores : MonoBehaviour
     public Image imagenElegida;
     public GameObject imagenNoImagen;
     public TMP_InputField inputNombre;
-    string rutaDef="";
+    string ruta="";
     //Popup Advertencia
     public GameObject popupAdvertenvia;
     public TMP_Text tituloPopupAdvertencia;
@@ -28,14 +30,41 @@ public class ManagerJugadores : MonoBehaviour
 
     //Generales
     Dictionary<string, Jugador> jugadores = new Dictionary<string, Jugador>();
+    Dictionary<string, string> strColoresHex = new Dictionary<string, string>();
+    ColorJugadores colorJuBBDD = new();
     Dictionary<string, Color> colores = new Dictionary<string, Color>();
     Dictionary<string, GameObject> botonesColor = new Dictionary<string, GameObject>();
     int numJugadores = 1;
+
+    //BBDD
+    ClaseManagerBBDD managerBBDD;
+    bool existeBaseDeDatos;
+
     // Start is called before the first frame update
     void Start()
     {
+        /*SQLitePCL.Batteries.Init();
+        SQLitePCL.raw.SetProvider(new SQLitePCL.SQLite3Provider_e_sqlite3());*/
+
+
+        string databasePath = Path.Combine(Application.persistentDataPath, "JuegOcaBBDD.db");
+        
+        
+        existeBaseDeDatos = File.Exists(databasePath);
+        managerBBDD = new ClaseManagerBBDD(databasePath);
+        if (!existeBaseDeDatos)
+        {
+            managerBBDD.CreateTable<ColorJugadores>();
+            managerBBDD.CreateTable<Jugador>();
+
+        }
+        else {
+            managerBBDD.DeletetAll<Jugador>();
+        }
+        
+
         jugadores = new Dictionary<string, Jugador>();
-        GeneraColores();
+        GenerarColores();
         AñadirBotonesColor();
 
     }
@@ -58,6 +87,19 @@ public class ManagerJugadores : MonoBehaviour
 
 
     }
+
+    public void AccionEmpezar()
+    {
+
+        AñadirJugadoresBBDD();
+        managerBBDD.CloseDatabase();
+        SceneManager.LoadScene("GenerarTablero"); // Cambia por el nombre real de la escena
+
+
+
+
+
+    }
     //Popup Jugador
     public void BotonVolver()
     {
@@ -67,11 +109,15 @@ public class ManagerJugadores : MonoBehaviour
 
     }
 
+
+
     public void BotonConfirmar()
     {
 
-        Jugador jugador = new Jugador(inputNombre.text, rutaDef, colorElegido.color,"FichaCorazon", 0);
+        Jugador jugador = new Jugador(inputNombre.text, ruta , ColorElegidoHex(colorElegido.color),"FichaCorazon", 0);
         ColorUtility.TryParseHtmlString("#FFFFFF", out Color blanco);
+
+        
 
 
         Boolean encontrado=false;
@@ -84,8 +130,8 @@ public class ManagerJugadores : MonoBehaviour
             }
             
         }
-
-        if (!jugador.Nombre.Equals("") && jugador.RutaImagen != "" && jugador.ColorIcono!= blanco && !encontrado)
+        ColorUtility.TryParseHtmlString(jugador.ColorIcono, out Color colorJugador);
+        if (!jugador.Nombre.Equals("") && jugador.RutaImagen!="" && colorJugador != blanco && !encontrado)
         {
 
             jugadores.Add(jugador.Nombre, jugador);
@@ -93,6 +139,7 @@ public class ManagerJugadores : MonoBehaviour
             numJugadores++;
             tituloPopup.text = "Jugador " + numJugadores;
             popupJugador.gameObject.SetActive(false);
+            eliminarColor(colorElegido.color);
             ReiniciarPopup();
 
 
@@ -107,7 +154,7 @@ public class ManagerJugadores : MonoBehaviour
     public void BotonElegirImagen()
     {
 
-       ElegirImagen();
+       ruta = ElegirImagen();
 
     }
 
@@ -118,7 +165,7 @@ public class ManagerJugadores : MonoBehaviour
         ColorUtility.TryParseHtmlString("#6756C1", out Color lila);
         imagenElegida.color = lila;
         imagenNoImagen.SetActive(true);
-        rutaDef = "";
+        ruta = "";
 
         foreach (Transform child in contenedorColores.transform)
         {
@@ -127,7 +174,6 @@ public class ManagerJugadores : MonoBehaviour
         }
 
         botonesColor = new Dictionary<string, GameObject>();
-        eliminarColor(colorElegido.color);
         colorElegido.color = blanco;
         AñadirBotonesColor();
     }
@@ -154,7 +200,58 @@ public class ManagerJugadores : MonoBehaviour
 
     //Popup Jugador----------------------------------------------------------------------------------------------------------------------------------
     //Generar Botones Colores Popup
-    void GeneraColores() {
+
+    void AñadirColores() {
+        strColoresHex.Add("rojo", "#FF0008");
+        strColoresHex.Add("verde", "#3EFF00");
+        strColoresHex.Add("amarillo", "#F4FF00");
+        strColoresHex.Add("fuxia", "#FF0086");
+        strColoresHex.Add("lila", "#9700FF");
+        strColoresHex.Add("azul", "#00D1FF");
+        strColoresHex.Add("lima", "#00FF8C");
+        strColoresHex.Add("naranja", "#FF7000");
+        strColoresHex.Add("rosa", "#D76097");
+        strColoresHex.Add("amarilloC", "#C1D760");
+    }
+    string ColorElegidoHex(Color color)
+    {
+        string strColor = "";
+        foreach (KeyValuePair<string, Color> co in colores)
+        {
+            if (co.Value == color)
+            {
+                strColor = co.Key;
+
+            }
+
+        }
+
+
+        return strColor;
+    }
+    void GenerarColor(string hex, string nombreColor) {
+
+        ColorUtility.TryParseHtmlString(hex, out Color color);
+        colores.Add(hex, color);
+    }
+
+    void GenerarColores() {
+        AñadirColores();
+        foreach (KeyValuePair<string, string> coH in strColoresHex) {
+            
+            GenerarColor(coH.Value, coH.Key);
+            if (!existeBaseDeDatos)
+            {
+                colorJuBBDD = new ColorJugadores(coH.Key, coH.Value);
+                managerBBDD.Insert<ColorJugadores>(colorJuBBDD);
+
+            }
+
+        
+        }
+    }
+    void GeneraColores2() {
+
 
         ColorUtility.TryParseHtmlString("#FF0008", out Color rojo); // Azul
         colores.Add("rojo", rojo);
@@ -206,7 +303,8 @@ public class ManagerJugadores : MonoBehaviour
             { 
                 colorElegido.color = botonInstanciado.image.color;
             });
-
+            
+            
             botonesColor.Add(co.Key,nuevoBoton);
 
 
@@ -233,17 +331,17 @@ public class ManagerJugadores : MonoBehaviour
     }
     //Elegir Imagen Popup
 
-    public void ElegirImagen()
+    string ElegirImagen()
     {
-        
+        string ruta = "";
         //noImagen.gameObject.SetActive(false);
 
         NativeFilePicker.PickFile((path) =>
         {
             if (!string.IsNullOrEmpty(path))
             {
-                rutaDef = path;
-                CambiarImagenJugador(imagenElegida.gameObject, rutaDef);
+                ruta = path;
+                CambiarImagenJugador(imagenElegida.gameObject, ruta);
             }
             else
             {
@@ -253,7 +351,7 @@ public class ManagerJugadores : MonoBehaviour
 
         }, new string[] { "image/*" }// Prueba con un solo formato
 );
-        
+        return ruta;
     }
     void CambiarImagenJugador(GameObject prefab, string path)
     {
@@ -316,6 +414,8 @@ public class ManagerJugadores : MonoBehaviour
     IEnumerator ProducirError(Jugador ju,Boolean encontrado) {
         popupAdvertenvia.gameObject.SetActive(true);
         ColorUtility.TryParseHtmlString("#FFFFFF", out Color blanco);
+        ColorUtility.TryParseHtmlString(ju.ColorIcono, out Color colorJugador);
+        Debug.Log("color: "+ ju.ColorIcono);
         if (ju.Nombre.Equals(""))
         {
 
@@ -324,14 +424,14 @@ public class ManagerJugadores : MonoBehaviour
             
 
         }
-        else if (ju.RutaImagen != "")
+        else if (ju.RutaImagen.Equals(""))
         {
             tituloPopupAdvertencia.text = "Error Imagen";
             problema.text = "No has elegido una imagen";
 
 
         }
-        else if (ju.ColorIcono == blanco)
+        else if (colorJugador == blanco)
         {
             tituloPopupAdvertencia.text = "Error Color";
             problema.text = "No has elegido un color";
@@ -350,6 +450,17 @@ public class ManagerJugadores : MonoBehaviour
         popupAdvertenvia.gameObject.SetActive(false); 
     }
 
+    //BBDD----------------------------------------------------------------------------
+
+
+
+    void AñadirJugadoresBBDD() {
+        foreach (KeyValuePair<string, Jugador> ju in jugadores) {
+
+
+            managerBBDD.Insert<Jugador>(ju.Value);
+        }
+    }
 
 
 }
