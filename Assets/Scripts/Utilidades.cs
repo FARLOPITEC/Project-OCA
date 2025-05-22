@@ -84,5 +84,19 @@ public class Utilidades : MonoBehaviour
             popup.SetActive(false);
     }
 
+    public void OcultarPopupDerecha(GameObject popup)
+    {
+        if (popup != null)
+        {
+            RectTransform rect = popup.GetComponent<RectTransform>();
+            Vector3 destino = rect.anchoredPosition + new Vector2(2000, 0); 
+
+            LeanTween.move(rect, destino, 0.4f).setOnComplete(() =>
+            {
+                popup.SetActive(false);
+            });
+        }
+    }
+
 
 }
