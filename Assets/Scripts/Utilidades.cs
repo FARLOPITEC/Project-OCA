@@ -62,15 +62,35 @@ public class Utilidades : MonoBehaviour
         SceneManager.LoadScene("MiniJuegoBotella");
     }
 
+    public void cambarEscenaMiniJuego3Cartas()
+    {
+        SceneManager.LoadScene("MiniJuego3Cartas");
+    }
+
+    public void cambarEscena0()
+    {
+        SceneManager.LoadScene("");
+    }
+    public void cambarEscena1()
+    {
+        SceneManager.LoadScene("");
+    }
+    public void cambarEscena2()
+    {
+        SceneManager.LoadScene("");
+    }
+    public void cambarEscena3()
+    {
+        SceneManager.LoadScene("");
+    }
     public void cambarEscena4()
     {
         SceneManager.LoadScene("");
     }
 
-    public void cambarEscena5()
-    {
-        SceneManager.LoadScene("");
-    }
+
+
+
 
     public void MostrarPopup(GameObject popup)
     {
