@@ -1,43 +1,44 @@
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
-using UnityEngine.SceneManagement;
-using System.Collections.Generic;
 
 public class SeleccionMinijuegos : MonoBehaviour
 {
     [System.Serializable]
-    public class Minijuego
+    public class MinijuegoUI
     {
         public Toggle toggle;
-        public TextAsset archivoCSV;
+        public string nombre;
         public Color color;
+        public TextAsset archivoCSV;
         public GameObject cartaPrefab;
     }
 
-    public List<Minijuego> minijuegos;
-    public string escenaRuleta = "MiniJuegoRuleta";
+    public List<MinijuegoUI> minijuegosUI;
+    public string escenaRuleta = "MiniJuegoBotella";
 
-    public static List<TextAsset> seleccionCSVs = new List<TextAsset>();
-    public static List<Color> seleccionColores = new List<Color>();
-    public static List<GameObject> seleccionPrefabs = new List<GameObject>();
+    public static List<MinijuegoData> minijuegosSeleccionados = new List<MinijuegoData>();
 
     public void Jugar()
     {
-        seleccionCSVs.Clear();
-        seleccionColores.Clear();
-        seleccionPrefabs.Clear();
+        minijuegosSeleccionados.Clear();
 
-        foreach (var mj in minijuegos)
+        foreach (var mj in minijuegosUI)
         {
             if (mj.toggle != null && mj.toggle.isOn)
             {
-                seleccionCSVs.Add(mj.archivoCSV);
-                seleccionColores.Add(mj.color);
-                seleccionPrefabs.Add(mj.cartaPrefab);
+                MinijuegoData nuevo = new MinijuegoData
+                {
+                    nombre = mj.nombre,
+                    color = mj.color,
+                    archivoCSV = mj.archivoCSV,
+                    cartaPrefab = mj.cartaPrefab
+                };
+
+                minijuegosSeleccionados.Add(nuevo);
             }
         }
 
-        if (seleccionCSVs.Count > 0)
-            SceneManager.LoadScene(escenaRuleta);
+        UnityEngine.SceneManagement.SceneManager.LoadScene(escenaRuleta);
     }
 }

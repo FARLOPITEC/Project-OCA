@@ -1,111 +1,127 @@
+using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
-using System.Collections;
-using System.Collections.Generic;
 
 public class GeneradorRuleta : MonoBehaviour
 {
     public RectTransform botella;
-    public Transform ruletaTransform;
+    public RectTransform ruletaTransform;
     public GameObject sectorPrefab;
+    public RectTransform contenedorCartas;
 
-    public float radio = 300f;
     public float duracionGiro = 3f;
 
-    private GameObject cartaActiva;
     private bool girando = false;
-
-    private Vector2 centro = Vector2.zero;
-    private Vector2 derecha = new Vector2(2000, 0);
+    private List<GameObject> sectores = new List<GameObject>();
+    private GameObject cartaActiva;
 
     void Start()
     {
-        GenerarRuleta();
+        CrearRuleta();
     }
 
-    void GenerarRuleta()
+    public void CrearRuleta()
     {
-        int total = SeleccionMinijuegos.seleccionCSVs.Count;
-        if (total == 0) return;
-
-        float anguloPorSector = 360f / total;
-        float anguloActual = 0f;
-
-        for (int i = 0; i < total; i++)
+        // Elimina sectores anteriores
+        foreach (var sector in sectores)
         {
+            Destroy(sector);
+        }
+        sectores.Clear();
+
+        int cantidad = SeleccionMinijuegos.minijuegosSeleccionados.Count;
+        if (cantidad == 0) return;
+
+        float anguloSector = 360f / cantidad;
+
+        for (int i = 0; i < cantidad; i++)
+        {
+            var data = SeleccionMinijuegos.minijuegosSeleccionados[i];
             GameObject sector = Instantiate(sectorPrefab, ruletaTransform);
-            sector.name = $"Sector_{i}";
-            sector.GetComponent<Image>().color = SeleccionMinijuegos.seleccionColores[i];
-
-            RectTransform rect = sector.GetComponent<RectTransform>();
-            rect.localEulerAngles = new Vector3(0, 0, -anguloActual);
-            rect.sizeDelta = new Vector2(2 * radio, 2 * radio);
-
-            anguloActual += anguloPorSector;
+            sector.transform.localRotation = Quaternion.Euler(0, 0, -i * anguloSector);
+            sector.GetComponent<Image>().fillAmount = 1f / cantidad;
+            sector.GetComponent<Image>().color = data.color;
+            sectores.Add(sector);
         }
     }
 
     public void GirarBotella()
     {
-        if (girando || SeleccionMinijuegos.seleccionCSVs.Count == 0) return;
-        StartCoroutine(FlujoGiro());
+        if (girando) return;
+        StartCoroutine(Girar());
     }
 
-    IEnumerator FlujoGiro()
+    private IEnumerator Girar()
     {
         girando = true;
 
-        if (cartaActiva != null)
+        float anguloInicial = botella.eulerAngles.z;
+        float anguloFinal = Random.Range(0f, 360f) + 360f * 5;
+        float tiempo = 0f;
+
+        while (tiempo < duracionGiro)
         {
-            RectTransform cartaRect = cartaActiva.GetComponent<RectTransform>();
-            LeanTween.move(cartaRect, derecha, 0.6f).setEaseInOutCubic();
-            yield return new WaitForSeconds(0.6f);
-            Destroy(cartaActiva);
+            float t = tiempo / duracionGiro;
+            float angulo = Mathf.Lerp(anguloInicial, anguloFinal, Mathf.SmoothStep(0f, 1f, t));
+            botella.rotation = Quaternion.Euler(0f, 0f, angulo);
+            tiempo += Time.deltaTime;
+            yield return null;
         }
 
-        int vueltas = Random.Range(3, 5);
-        float anguloExtra = Random.Range(0f, 360f);
-        float anguloFinal = vueltas * 360f + anguloExtra;
+        botella.rotation = Quaternion.Euler(0f, 0f, anguloFinal % 360f);
 
-        bool terminado = false;
-        LeanTween.rotateZ(botella.gameObject, anguloFinal, duracionGiro).setEaseOutCubic().setOnComplete(() =>
-        {
-            terminado = true;
-        });
-
-        yield return new WaitUntil(() => terminado);
         yield return new WaitForSeconds(0.5f);
 
-        float anguloDetenido = botella.eulerAngles.z % 360f;
-        int index = Mathf.FloorToInt(anguloDetenido / (360f / SeleccionMinijuegos.seleccionCSVs.Count));
-        index = Mathf.Clamp(index, 0, SeleccionMinijuegos.seleccionCSVs.Count - 1);
+        float anguloBotella = (360f - botella.eulerAngles.z + 90f) % 360f;
+        int cantidad = SeleccionMinijuegos.minijuegosSeleccionados.Count;
+        float anguloPorSector = 360f / cantidad;
+        int index = Mathf.FloorToInt(anguloBotella / anguloPorSector);
+
+        if (index < 0 || index >= cantidad)
+        {
+            Debug.LogWarning("Índice fuera de rango: " + index);
+            girando = false;
+            yield break;
+        }
 
         MostrarCarta(index);
         girando = false;
     }
 
-    void MostrarCarta(int index)
+    private void MostrarCarta(int index)
     {
-        GameObject carta = Instantiate(SeleccionMinijuegos.seleccionPrefabs[index], transform.parent);
-        RectTransform cartaRect = carta.GetComponent<RectTransform>();
+        if (cartaActiva != null)
+        {
+            Destroy(cartaActiva);
+        }
 
-        carta.SetActive(true);
-        cartaRect.anchoredPosition = derecha;
-        LeanTween.move(cartaRect, centro, 0.6f).setEaseOutBack();
+        var data = SeleccionMinijuegos.minijuegosSeleccionados[index];
+        cartaActiva = Instantiate(data.cartaPrefab, contenedorCartas);
 
-        string frase = ObtenerFraseAleatoria(SeleccionMinijuegos.seleccionCSVs[index]);
-        TextMeshProUGUI texto = carta.GetComponentInChildren<TextMeshProUGUI>();
-        if (texto != null) texto.text = frase;
+        RectTransform rect = cartaActiva.GetComponent<RectTransform>();
+        if (rect != null)
+        {
+            rect.anchorMin = new Vector2(0.5f, 0.5f);
+            rect.anchorMax = new Vector2(0.5f, 0.5f);
+            rect.pivot = new Vector2(0.5f, 0.5f);
+            rect.anchoredPosition = Vector2.zero;
+            rect.localScale = Vector3.one;
+        }
 
-        cartaActiva = carta;
+        TextAsset csv = data.archivoCSV;
+        if (csv != null)
+        {
+            string[] lineas = csv.text.Split('\n');
+            string frase = lineas[Random.Range(0, lineas.Length)].Trim();
+
+            TextMeshProUGUI txt = cartaActiva.GetComponentInChildren<TextMeshProUGUI>();
+            if (txt != null)
+            {
+                txt.text = frase;
+            }
+        }
     }
 
-    string ObtenerFraseAleatoria(TextAsset csv)
-    {
-        if (csv == null) return "";
-        string[] lineas = csv.text.Split(new[] { '\r', '\n' }, System.StringSplitOptions.RemoveEmptyEntries);
-        if (lineas.Length == 0) return "";
-        return lineas[Random.Range(0, lineas.Length)];
-    }
 }
