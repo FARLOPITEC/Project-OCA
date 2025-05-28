@@ -39,17 +39,6 @@ public class SeleccionMinijuegos : MonoBehaviour
             }
         }
 
-
-
-        // DEBUG
-        /**/
-        Debug.Log("Minijuegos seleccionados:");
-        foreach (var mj in minijuegosSeleccionados)
-        {
-            Debug.Log($"- {mj.nombre}");
-        }
-
         UnityEngine.SceneManagement.SceneManager.LoadScene(escenaRuleta);
-        /**/
     }
 }

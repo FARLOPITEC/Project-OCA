@@ -52,7 +52,6 @@ public class GeneradorRuleta : MonoBehaviour
     {
         if (girando) return;
 
-        // Conprueba si hay una carta 
         if (cartaActiva != null)
         {
             RectTransform rect = cartaActiva.GetComponent<RectTransform>();
@@ -60,9 +59,9 @@ public class GeneradorRuleta : MonoBehaviour
             {
                 LeanTween.moveX(rect, Screen.width, 0.4f).setEaseInExpo().setOnComplete(() =>
                 {
-                    Destroy(cartaActiva); // Elimina la carta
-                    cartaActiva = null; 
-                    StartCoroutine(Girar()); // Una vez eliminada la carta gira
+                    Destroy(cartaActiva);
+                    cartaActiva = null;
+                    StartCoroutine(Girar());
                 });
                 return;
             }
@@ -97,27 +96,13 @@ public class GeneradorRuleta : MonoBehaviour
 
         yield return new WaitForSeconds(0.5f);
 
-        // Calculo del angulo de la PUNTA de la botella
         Vector2 direccion = botella.up;
         float anguloBotella = Mathf.Atan2(direccion.y, direccion.x) * Mathf.Rad2Deg;
         anguloBotella = (450f - anguloBotella) % 360f;
 
-        // Calcular indice del sector
         int cantidad = SeleccionMinijuegos.minijuegosSeleccionados.Count;
         float anguloPorSector = 360f / cantidad;
         int index = Mathf.FloorToInt(anguloBotella / anguloPorSector);
-
-        Debug.Log("Ángulo botella corregido (punta): " + anguloBotella);
-        Debug.Log("Índice corregido: " + index);
-
-        if (index < 0 || index >= cantidad)
-        {
-            Debug.LogWarning("Índice fuera de rango: " + index);
-            girando = false;
-            yield break;
-        }
-
-        Debug.Log("Minijuego seleccionado: " + SeleccionMinijuegos.minijuegosSeleccionados[index].nombre);
 
         MostrarCarta(index);
         girando = false;
@@ -129,7 +114,6 @@ public class GeneradorRuleta : MonoBehaviour
             Destroy(child.gameObject);
 
         var data = SeleccionMinijuegos.minijuegosSeleccionados[index];
-        Debug.Log("Mostrando carta del minijuego: " + data.nombre);
 
         cartaActiva = Instantiate(data.cartaPrefab, contenedorCartas);
         RectTransform rect = cartaActiva.GetComponent<RectTransform>();
@@ -142,7 +126,6 @@ public class GeneradorRuleta : MonoBehaviour
             rect.anchoredPosition = new Vector2(-Screen.width, 0);
             rect.localScale = Vector3.one;
 
-            // Animación de entrada desde la izquierda
             LeanTween.moveX(rect, 0f, 0.5f).setEaseOutExpo();
         }
 
@@ -151,16 +134,11 @@ public class GeneradorRuleta : MonoBehaviour
             string[] lineas = data.archivoCSV.text.Split('\n');
             string frase = lineas[Random.Range(0, lineas.Length)].Trim();
 
-            Debug.Log("Frase seleccionada: " + frase);
-
             var txt = cartaActiva.GetComponentInChildren<TextMeshProUGUI>();
             if (txt != null)
                 txt.text = frase;
-            else
-                Debug.LogWarning("No se encontró TextMeshProUGUI.");
         }
 
-        // Hacer que se pueda cerrar con clic/tap
         Button btn = cartaActiva.GetComponent<Button>();
         if (btn != null)
         {
@@ -179,5 +157,4 @@ public class GeneradorRuleta : MonoBehaviour
             });
         }
     }
-
 }
