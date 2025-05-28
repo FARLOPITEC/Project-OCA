@@ -8,7 +8,7 @@ public class SeleccionMinijuegos : MonoBehaviour
     public class MinijuegoUI
     {
         public Toggle toggle;
-        public string nombre;
+        //public string nombre;
         public Color color;
         public TextAsset archivoCSV;
         public GameObject cartaPrefab;
@@ -29,7 +29,7 @@ public class SeleccionMinijuegos : MonoBehaviour
             {
                 MinijuegoData nuevo = new MinijuegoData
                 {
-                    nombre = mj.nombre,
+                    //nombre = mj.nombre,
                     color = mj.color,
                     archivoCSV = mj.archivoCSV,
                     cartaPrefab = mj.cartaPrefab
@@ -39,6 +39,17 @@ public class SeleccionMinijuegos : MonoBehaviour
             }
         }
 
+
+
+        // DEBUG
+        /**/
+        Debug.Log("Minijuegos seleccionados:");
+        foreach (var mj in minijuegosSeleccionados)
+        {
+            Debug.Log($"- {mj.nombre}");
+        }
+
         UnityEngine.SceneManagement.SceneManager.LoadScene(escenaRuleta);
+        /**/
     }
 }
