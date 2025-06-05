@@ -7,9 +7,10 @@ public class Latido : MonoBehaviour
     public AnimationCurve beatCurve; // Se puede editar en el Inspector
     public float beatSpeed = 0.5f;
     public float scaleAmount = 1f;
-    void Start()
+    private Vector3 posicionOriginal;
+    void Awake()
     {
-        
+        posicionOriginal = transform.position; // Guarda la posición inicial
     }
 
     // Update is called once per frame
@@ -18,8 +19,6 @@ public class Latido : MonoBehaviour
         float t = Mathf.PingPong(Time.time * beatSpeed, 1f);
         float scale = 2f + beatCurve.Evaluate(t) * scaleAmount;
         transform.localScale = new Vector3(scale, scale, scale);
-
+        transform.position = posicionOriginal; // Asegura que la posición no cambie
     }
-
-
 }

@@ -2,6 +2,7 @@ using SQLite;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UIElements;
 
 public class Ficha
 {
@@ -78,5 +79,22 @@ public class ClaseManagerBBDD
     public void CloseDatabase()
     {
         connection.Close();
+    }
+}
+
+//Tablero 2D
+
+public class Casilla2D
+{
+
+    public int Posicion { get; set; }
+    public int Numero { get; set; }
+    public Sprite Imagen { get; set; }
+
+    public Casilla2D(int posicion, int numero, Sprite imagen)
+    {
+        Posicion = posicion;
+        Numero = numero;
+        Imagen = imagen;
     }
 }

@@ -93,7 +93,7 @@ public class ManagerJugadores : MonoBehaviour
 
         AñadirJugadoresBBDD();
         managerBBDD.CloseDatabase();
-        SceneManager.LoadScene("GenerarTablero"); // Cambia por el nombre real de la escena
+        SceneManager.LoadScene("MenuModosDeJuego"); // Cambia por el nombre real de la escena
 
 
 

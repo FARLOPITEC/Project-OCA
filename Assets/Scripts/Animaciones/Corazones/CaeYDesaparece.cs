@@ -19,7 +19,7 @@ public class CaeYDesaparece : MonoBehaviour
 
     private GameObject[] instances;
 
-    void Start()
+    void Awake()
     {
         instances = new GameObject[spawnPoints.Length];
         StartCoroutine(SpawnPrefabsWithDelay());
@@ -52,7 +52,7 @@ public class CaeYDesaparece : MonoBehaviour
         for (int i = 0; i < spawnPoints.Length; i++)
         {
             yield return new WaitForSeconds(spawnDelay);
-            instances[i] = SpawnPrefabAt(spawnPoints[i]);
+            instances[i] = SpawnPrefabAt(spawnPoints[i] + new Vector3(5000, 0, 0));
         }
     }
 

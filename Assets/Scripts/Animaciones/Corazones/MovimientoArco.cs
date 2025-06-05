@@ -11,9 +11,10 @@ public class MovimientoArco : MonoBehaviour
 
     private Vector3 startPosition;
 
-    void Start()
+    void Awake()
     {
         startPosition = transform.position; // Guarda la posición inicial
+        //Debug.Log("startPosition"+ startPosition+ " Name: " +gameObject.name);
     }
 
     void Update()

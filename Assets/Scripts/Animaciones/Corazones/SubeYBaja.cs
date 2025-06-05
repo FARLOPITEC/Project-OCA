@@ -14,7 +14,9 @@ public class SubeYBaja : MonoBehaviour
 
     void Start()
     {
-        startPosition = transform.position;  // Guardamos la posición inicial
+        startPosition = transform.position + new Vector3(5000, 0, 0); // Sumar 5000 en X
+        transform.position = startPosition; // Aplicar la posición inicial desplazada
+
     }
 
     void Update()
