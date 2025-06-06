@@ -62,15 +62,35 @@ public class Utilidades : MonoBehaviour
         SceneManager.LoadScene("MiniJuegoBotella");
     }
 
+    public void cambarEscenaMiniJuego3Cartas()
+    {
+        SceneManager.LoadScene("MiniJuego3Cartas");
+    }
+
+    public void cambarEscena0()
+    {
+        SceneManager.LoadScene("");
+    }
+    public void cambarEscena1()
+    {
+        SceneManager.LoadScene("");
+    }
+    public void cambarEscena2()
+    {
+        SceneManager.LoadScene("");
+    }
+    public void cambarEscena3()
+    {
+        SceneManager.LoadScene("");
+    }
     public void cambarEscena4()
     {
         SceneManager.LoadScene("");
     }
 
-    public void cambarEscena5()
-    {
-        SceneManager.LoadScene("");
-    }
+
+
+
 
     public void MostrarPopup(GameObject popup)
     {
@@ -82,6 +102,20 @@ public class Utilidades : MonoBehaviour
     {
         if (popup != null)
             popup.SetActive(false);
+    }
+
+    public void OcultarPopupDerecha(GameObject popup)
+    {
+        if (popup != null)
+        {
+            RectTransform rect = popup.GetComponent<RectTransform>();
+            Vector3 destino = rect.anchoredPosition + new Vector2(2000, 0); 
+
+            LeanTween.move(rect, destino, 0.4f).setOnComplete(() =>
+            {
+                popup.SetActive(false);
+            });
+        }
     }
 
 
