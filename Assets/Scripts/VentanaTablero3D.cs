@@ -22,6 +22,9 @@ public class VentanaTablero3D : MonoBehaviour
     public GameObject bordTableroMediano;
     public GameObject bordTableroPequeño;
     public GameObject contenedorCorazones;
+    public GameObject popupPreCarga;
+    public GameObject camaraPopup;
+    public GameObject camaraReferencia;
 
     public Image imagenCanvas;
     public GameObject contenedorIconos;
@@ -30,11 +33,6 @@ public class VentanaTablero3D : MonoBehaviour
     public List<Material> materiales;
     List<ColorJugadores> coloresJu;
 
-    //Vector3[] posicionesTablero;
-    //public GameObject prefabFicha;
-    //int posicionActual = 0;
-    //GameObject[] fichass;
-
     Dictionary<string, Jugador3D> jugadores=new Dictionary<string, Jugador3D>();
     Dictionary<int, Vector3> posicionesTablero= new Dictionary<int, Vector3>();
     Dictionary<string, GameObject> fichas= new Dictionary<string, GameObject>();
@@ -42,8 +40,8 @@ public class VentanaTablero3D : MonoBehaviour
     Dictionary<int, GameObject> iconos = new Dictionary<int, GameObject>();
 
     int jugadorActual=1;
-    int filas = 11;
-    int columnas = 11;
+    public int filas = 11;
+    public int columnas = 11;
 
     List<int> tableroEsquina;
 
@@ -72,20 +70,8 @@ public class VentanaTablero3D : MonoBehaviour
     private Vector3 posicionInicial;
     private Quaternion rotacionInicial;
 
-
-
     float tiempoQuieto = 0f; // Acumulador de tiempo en reposo
     float tiempoNecesario = 1f; // Tiempo mínimo en reposo antes de resetear
-
-    Dictionary<int, Vector3> rotacionesDado = new Dictionary<int, Vector3>
-        {
-            {1, new Vector3(90, 0, 0)},
-            {2, new Vector3(0, 0, 0)},
-            {3, new Vector3(0, 0, -90)},
-            {4, new Vector3(0, 0, 90)},
-            {5, new Vector3(0, 0, 180)},
-            {6, new Vector3(-90, 0, 0)}
-        };
 
     public float anguloRotacion = -90f;
 
@@ -106,7 +92,6 @@ public class VentanaTablero3D : MonoBehaviour
     public GameObject prefabsFicha2D;
 
     Dictionary<int,GameObject> casillas2D = new Dictionary<int,GameObject>();
-    //List<GameObject> casillas2D = new List<GameObject>();
     Dictionary<int, int> mapaEspiralAGrid = new Dictionary<int, int>();
 
     ////Cambio De Tablero--------------------------------------------------------
@@ -139,9 +124,20 @@ public class VentanaTablero3D : MonoBehaviour
     ClaseManagerBBDD managerBBDD;
     List<Jugador> jugBBDD;
 
+    void Awake()
+    {
+        GenerarMapaEspiralAGrid();
+        //Tablero y Fichas
+        GenerarTablero3D(filas, columnas);
+        
+    }
+
     // Start is called before the first frame update
     void Start()
     {
+
+        StartCoroutine(MovimientoHada());
+        
         //Dado
         posicionInicial = dado.transform.position;
         rotacionInicial = dado.transform.rotation;
@@ -154,13 +150,6 @@ public class VentanaTablero3D : MonoBehaviour
         //Lienzo
         CrearLienzo();
 
-        GenerarMapaEspiralAGrid();
-
-        //Tablero y Fichas
-        GenerarTablero3D(filas, columnas);
-
-
-
         //BBDD
         string databasePath = Path.Combine(Application.persistentDataPath, "JuegOcaBBDD.db");
         managerBBDD = new ClaseManagerBBDD(databasePath);
@@ -169,28 +158,30 @@ public class VentanaTablero3D : MonoBehaviour
         CargarJugadores();
         CargarColores();
 
-        //Tablero 2D
-        GenerarTablero2D();
-
 
         PersonalizarFicha();
         MarcoJugador();
 
-        ////Configuracion
-        //Tablero2D
+        //Tablero 2D
+        GenerarTablero2D();
+        AñadirFicha2D();
         MoverFicha2DAlFinal(fichas2D[turnos[jugadorActual]]);
         MoverFicha2DAlFinal(fichasBTN2D[turnos[jugadorActual]]);
-        
+
+        ////Configuracion
+        //Tablero2D
+
         MoverFicha2DAlFinal(fichas[jugadores[turnos[jugadorActual]].Ficha]);
-        //TurnoMaterial(jugadorActual);
         TurnoCamara(fichas[jugadores[turnos[jugadorActual]].Ficha]);
         VerificarSuperposicion();
         
 
     }
 
+
+
     // Update is called once per frame
-    
+
     void Update()
     {
         ActualizarDibujoWin();
@@ -218,18 +209,21 @@ public class VentanaTablero3D : MonoBehaviour
             tableroEsquina = new List<int>() { 10, 20, 30, 39, 48, 56, 64, 71, 78, 84, 90, 95, 100, 104, 108, 111, 114, 116, 118, 119 };
             porcentaje = new float[] { 0.33f, 0.59f, 0.79f, 0.92f };
             bordTableroGrande.SetActive(true);
+            contenedorCorazones.transform.position = new Vector3(5025.5f, 20.4f, 15.3f);
         }
         else if (filas * columnas < 9 * 9)
         {
             tableroEsquina = new List<int>() { 6, 12, 18, 23, 28, 32, 36, 39, 42, 44, 46, 47 };
             porcentaje = new float[] { 0.47f, 0.8f, 0.99f, 0.0f };
             bordTableroPequeño.SetActive(true);
+            contenedorCorazones.transform.position = new Vector3(5015.14602f, 20.70971f, 4.148824f);
         }
         else
         {
             tableroEsquina = new List<int>() { 8, 16, 24, 31, 38, 44, 50, 55, 60, 64, 68, 71, 74, 76, 78, 79 };
             porcentaje = new float[] { 0.39f, 0.69f, 0.88f, 0.0f };
             bordTableroMediano.SetActive(true);
+            contenedorCorazones.transform.position = new Vector3(5020.4f, 20.4f, 10.2f);
         }
         for (int i = 0; i < filas * columnas; i++)
         {
@@ -269,48 +263,24 @@ public class VentanaTablero3D : MonoBehaviour
             GameObject casilla = null;
             Quaternion rotacionO = Quaternion.Euler(0f, 0f, 0f);
 
-            if (i == 0)
+            if (tableroEsquina.Contains(i))
+            {
+                Quaternion rotacion45 = Quaternion.Euler(0f, 0f, 45f);
+                rotacionCasilla *= rotacion45;
+                casilla = Instantiate(prefabCasEsq, posicionCasilla, rotacionO);
+            }else if (i == 0)
             {
                 casilla = Instantiate(prefabCasSal, posicionCasilla, rotacionO);
 
             }
-            else if (i==(filas * columnas)-1) {
+            else if (i== filas * columnas) {
                 casilla = Instantiate(prefabCasSal, posicionCasilla, rotacionO);
             }
             else {
                 casilla = Instantiate(prefabCasNorm, posicionCasilla, rotacionO);
             }
 
-            if (filas * columnas > 9 * 9)
-            {
-                if (i == 10 || i == 20 || i == 30 || i == 39 || i == 48 || i == 56 || i == 64 || i == 71 || i == 78 || i == 84 || i == 90 || i == 95 || i == 100 || i == 104 || i == 108 || i == 111 || i == 114 || i == 116 || i == 118 || i == 119)
-                {
-                    Quaternion rotacion45 = Quaternion.Euler(0f, 0f, 45f);
-                    rotacionCasilla *= rotacion45;
-                    casilla = Instantiate(prefabCasEsq, posicionCasilla, rotacionO);
-                    contenedorCorazones.transform.position = new Vector3(25.5f, 20.4f, 15.3f);
-
-                }
-            }
-            else if (filas * columnas < 9 * 9)
-            {
-                if (i == 6 || i == 12 || i == 18 || i == 23 || i == 28 || i == 32 || i == 36 || i == 39 || i == 42 || i == 44 || i == 46 || i == 47)
-                {
-                    Quaternion rotacion45 = Quaternion.Euler(0f, 0f, 45f);
-                    rotacionCasilla *= rotacion45;
-                    casilla = Instantiate(prefabCasEsq, posicionCasilla, rotacionO);
-                    contenedorCorazones.transform.position = new Vector3(5015.14602f, 20.70971f, 4.148824f);
-                }
-            }
-            else {
-                if (i == 8 || i == 16 || i == 24 || i == 31 || i == 38 || i == 44 || i == 50 || i == 55 || i == 60 || i == 64 || i == 68 || i == 71 || i == 74 || i == 76 || i == 78 || i == 79)
-                {
-                    Quaternion rotacion45 = Quaternion.Euler(0f, 0f, 45f);
-                    rotacionCasilla *= rotacion45;
-                    casilla = Instantiate(prefabCasEsq, posicionCasilla, rotacionO);
-                    contenedorCorazones.transform.position = new Vector3(20.4f, 20.4f, 10.2f);
-                }
-            }
+ 
 
             TextMeshPro textComponent = casilla.GetComponentInChildren<TextMeshPro>();
             if (textComponent != null)
@@ -350,7 +320,7 @@ public class VentanaTablero3D : MonoBehaviour
                     textComponent.color = Color.red;
                     AsignarTextura(casilla, i, fullImage, filas);
                 }
-                else if (i == (filas * columnas) - 1 || i == 0)
+                else if (i == filas * columnas || i == 0)
                 {
 
                 }
@@ -395,6 +365,8 @@ public class VentanaTablero3D : MonoBehaviour
                 dx = 1; dz = 0; z++; x++;
                 leftBound++;
             }
+            //Debug.Log("i:"+ i + " Count: " + (filas * columnas));
+
         }
 
     }
@@ -445,10 +417,6 @@ public class VentanaTablero3D : MonoBehaviour
                 }
             }
         }
-
-
-
-
     }
 
 
@@ -540,7 +508,7 @@ public class VentanaTablero3D : MonoBehaviour
                     TMP_Text textoTMP = planeMesh.GetComponent<TMP_Text>(); // Obtener el componente antes de modificarlo
                     if (textoTMP != null)
                     {
-                        Debug.Log(textoTMP.text + "   " + turnos[jugador]);
+                        //Debug.Log(textoTMP.text + "   " + turnos[jugador]);
                         Color colorTexto = textoTMP.color;
                         colorTexto.a = 100f / 255f;
                         textoTMP.color = colorTexto;
@@ -606,7 +574,6 @@ public class VentanaTablero3D : MonoBehaviour
                     TMP_Text textoTMP = planeMesh.GetComponent<TMP_Text>(); // Obtener el componente antes de modificarlo
                     if (textoTMP != null)
                     {
-                        Debug.Log(textoTMP.text + "   " + turnos[jugador]);
                         Color colorTexto = textoTMP.color;
                         colorTexto.a = 255f / 255f;
                         textoTMP.color = colorTexto;
@@ -639,21 +606,10 @@ public class VentanaTablero3D : MonoBehaviour
         for (int i = 1; i <= turnos.Count;i++) {
             if (turnos[i].Equals(jugadores[turnos[jugador]].Nombre))
             {
-                //Debug.LogError("FichasOpacas: turnos[i]: " + turnos[i] + " ju.Nombre: " + jugadores[turnos[i]].Nombre);
-                //FichasOpacas(fichas[jugadores[turnos[i]].Ficha]);
                 ColorMaterialOpacoIns(i);
-                //CambiarMaterialGlobal(i);
-                //fichas[jugadores[turnos[i]].Ficha].GetComponent<Renderer>().material = ColorMaterialOpaco(jugadores[turnos[i]].ColorIcono);
-                //fichas[jugadores[turnos[i]].Ficha].GetComponent<Renderer>().material.SetFloat("_Mode", fichas[jugadores[turnos[i]].Ficha].GetComponent<Renderer>().material.GetFloat("_Mode"));
             }
             else {
-                //Debug.LogError("FichasTraslucidas: turnos[i]: " + turnos[i] + " ju.Nombre: " + jugadores[turnos[i]].Nombre);
-                //FichasTraslucidas(fichas[jugadores[turnos[i]].Ficha]);
                 ColorMaterialTraslucidoIns(i);
-                //fichas[jugadores[turnos[i]].Ficha].GetComponent<Renderer>().material = ColorMaterialTraslucido(jugadores[turnos[i]].ColorIcono);
-                //fichas[jugadores[turnos[i]].Ficha].GetComponent<Renderer>().material.SetFloat("_Mode", fichas[jugadores[turnos[i]].Ficha].GetComponent<Renderer>().material.GetFloat("_Mode"));
-                //CambiarMaterialGlobal(i);
-
             }
         }
 
@@ -670,6 +626,7 @@ public class VentanaTablero3D : MonoBehaviour
 
                 TurnoMaterial(jugadorActual);
                 VerificarSuperposicion();
+
                 fichas[jugadores[turnos[i]].Ficha].transform.Find("CameraFicha").gameObject.SetActive(true);
 
                 
@@ -708,7 +665,6 @@ public class VentanaTablero3D : MonoBehaviour
                 hayOtraFichaEnMismaCasilla = true;
                 if (jugador.Value.Nombre.Equals(turnos[jugadorActual]))
                 {
-                    //Debug.Log(jugador.Value.Nombre);
                     HacerVisible(fichas[jugador.Value.Ficha]);
                 }
                 else
@@ -725,22 +681,21 @@ public class VentanaTablero3D : MonoBehaviour
         }
         
     }
+    void GestionarVisibilidadFicha(int posicionActual, int siguientePosicion)
+    {
+        foreach (KeyValuePair<string, Jugador3D> jugador in jugadores)
+        {
+            if (jugador.Value.Posicion == siguientePosicion)
+            {
+                fichas[jugador.Value.Ficha].SetActive(false); // Desactiva si hay ficha en la casilla destino
+            }
 
-    void ComprobarCoincidencias(int jugador) {
-        for (int i=1;i<jugadores.Count;i++) {
-            Debug.Log("jugadores.Count: "+ jugadores.Count+ " jugadores[turnos[i]].Nombre: " + jugadores[turnos[i]].Nombre+" i: "+i);
-                if (jugadores[turnos[i]] != jugadores[turnos[jugador]] && jugadores[turnos[i]].Posicion == jugadores[turnos[jugador]].Posicion)
-                {
-                   if(!turnos[i].Equals(turnos[jugadorActual]))HacerInvisible(fichas[jugadores[turnos[i]].Ficha]);
-                }
-                else {
-                    if (turnos[i].Equals(turnos[jugadorActual])) HacerVisible(fichas[jugadores[turnos[i]].Ficha]);
-                }
+            if (jugador.Value.Posicion == posicionActual)
+            {
+                fichas[jugador.Value.Ficha].SetActive(true); // Activa la ficha del jugador que ha llegado
+            }
         }
-    
     }
- 
-
 
 
     void PersonalizarFicha() {
@@ -752,9 +707,6 @@ public class VentanaTablero3D : MonoBehaviour
                 if (nuevaFicha != null)
                 {
                     //Tablero 3D
-                    //nuevaFicha.GetComponent<Renderer>().material = ColorElegidoMaterial(ju.Value.ColorIcono);
-                    
-
                     Transform textFront = nuevaFicha.transform.Find("NombreFront");
                     Transform textBack = nuevaFicha.transform.Find("NombreBack");
                     TextMeshPro textComponentFront = textFront.GetComponent<TextMeshPro>();
@@ -783,16 +735,11 @@ public class VentanaTablero3D : MonoBehaviour
                     camaraTransform.gameObject.SetActive(false);
                     if (cont == 1) camaraTransform.gameObject.SetActive(true);
 
-                    //nuevaFicha.SetActive(false);
                     nuevaFicha.transform.SetParent(casillas.transform, false);
-
-                    
-                    
-
 
                 }
             }));
-            //fichas.Add(ju.Value.Nombre, ju.Value.Posicion);
+
             cont++;
         }
         
@@ -810,13 +757,16 @@ public class VentanaTablero3D : MonoBehaviour
                 block = true;
 
                 
+                
                 FisicasDado();
                 StartCoroutine(EsperarPararDado());
-
+                
             }
             else {
                 fichas[jugadores[turnos[jugadorActual]].Ficha].transform.Find("CameraFicha").gameObject.SetActive(false);
+
                 PopupDado.SetActive(true);
+                if (Boton3D.activeSelf) popupTablero2D.SetActive(false);
             }
 
         }
@@ -865,8 +815,6 @@ public class VentanaTablero3D : MonoBehaviour
     }
 
     void FisicasDado() {
-        //Debug.Log("Rotación del dado: " + dado.transform.rotation.eulerAngles);
-
 
         rb.useGravity = true;
         // Reiniciar velocidad antes de lanzar
@@ -919,9 +867,8 @@ public class VentanaTablero3D : MonoBehaviour
         if (tiempoQuieto >= tiempoNecesario)
         {
             DetectarCaraSuperiorDef();
+            if (Boton3D.activeSelf) popupTablero2D.SetActive(true);
             PopupDado.SetActive(false);
-            //fichas.GetValueOrDefault(jugadores.GetValueOrDefault(turnos.GetValueOrDefault(jugadorActual)).Ficha).SetActive(true);
-            //fichas[jugadores[turnos[jugadorActual]].Ficha].transform.Find("CamaraFicha").gameObject.SetActive(true);
             
             TurnoCamara(fichas[jugadores[turnos[jugadorActual]].Ficha]);
             
@@ -950,7 +897,7 @@ public class VentanaTablero3D : MonoBehaviour
 
             }
         }
-        block = false;
+        
     }
   
 
@@ -968,17 +915,17 @@ public class VentanaTablero3D : MonoBehaviour
         int nuevaPosicion = jugadores[turnos[jugador]].Posicion + resultadoDado;
         if (posicionesTablero.ContainsKey(nuevaPosicion))
         {
+            
             while (jugadores[turnos[jugador]].Posicion < nuevaPosicion)
             {
                 int siguienteCasilla = jugadores[turnos[jugador]].Posicion + 1;
-                //ComprobarCoincidencias(siguienteCasilla);
-
+                GestionarVisibilidadFicha(jugadores[turnos[jugador]].Posicion, siguienteCasilla);
                 if (!posicionesTablero.ContainsKey(siguienteCasilla)) break; // Detener si la siguiente casilla no existe
 
-                /*Vector3 posicionInicial = posicionesTablero[jugadores.GetValueOrDefault(turnos.GetValueOrDefault(jugador)).Posicion];
-                Vector3 posicionDestino = posicionesTablero[siguienteCasilla];*/
 
-                
+
+
+
                 Vector3 posicionInicial = casillas.transform.TransformPoint(posicionesTablero[jugadores[turnos[jugador]].Posicion]);
                 Vector3 posicionDestino = casillas.transform.TransformPoint(posicionesTablero[siguienteCasilla]);
 
@@ -994,11 +941,12 @@ public class VentanaTablero3D : MonoBehaviour
 
                     yield return null;
                 }
-
+                GestionarVisibilidadFicha(jugadores[turnos[jugador]].Posicion, siguienteCasilla);
                 jugadores.GetValueOrDefault(turnos.GetValueOrDefault(jugador)).Posicion++;
+                //GestionarVisibilidadFicha(jugadores[turnos[jugador]].Posicion, siguienteCasilla);
                 yield return new WaitForSeconds(pausaEntreCasillas); // Pausa antes de seguir avanzando
-                                                                     // Si la casilla es una esquina, rotar la cámara
-                
+                                                                  // Si la casilla es una esquina, rotar la cámara
+
                 if (tableroEsquina.Contains(jugadores.GetValueOrDefault(turnos.GetValueOrDefault(jugadorActual)).Posicion))
                 {
                     
@@ -1006,17 +954,14 @@ public class VentanaTablero3D : MonoBehaviour
 
                 }
             }
-            //fichas.GetValueOrDefault(jugadores.GetValueOrDefault(turnos.GetValueOrDefault(jugadorActual)).Ficha).SetActive(false);
-            //fichas[jugadores[turnos[jugadorActual]].Ficha].transform.Find("CamaraFicha").gameObject.SetActive(false);
-            
+
             jugadorActual = siguienteJugador(jugador);
             TurnoCamara(fichas[jugadores[turnos[jugadorActual]].Ficha]);
 
             MoverFicha2DAlFinal(fichas2D[turnos[jugadorActual]]);
             MoverFicha2DAlFinal(fichasBTN2D[turnos[jugadorActual]]);
             MarcoJugador();
-            //fichas.GetValueOrDefault(jugadores.GetValueOrDefault(turnos.GetValueOrDefault(jugadorActual)).Ficha).SetActive(true);
-            //fichas[jugadores[turnos[jugadorActual]].Ficha].transform.Find("CamaraFicha").gameObject.SetActive(true);
+
         }
         block=false;
     }
@@ -1053,10 +998,9 @@ public class VentanaTablero3D : MonoBehaviour
         {
             ColorUtility.TryParseHtmlString(ju.ColorIcono, out Color color);
 
-
             ////Tablero 2D
             GameObject fichaPrefab2D = Instantiate(prefabsFicha2D);
-
+            
 
             Image ColorBoton2D = fichaPrefab2D.gameObject.GetComponentInChildren<Image>();
             ColorUtility.TryParseHtmlString(ju.ColorIcono, out Color color2D);
@@ -1068,12 +1012,14 @@ public class VentanaTablero3D : MonoBehaviour
 
             fichaPrefab2D.transform.SetParent(contenedorFichas2D.transform, false);
             
+            //Debug.Log("posicionFicha: "+ casillas2D[110].GetComponent<RectTransform>().anchoredPosition);
             fichas2D.Add(ju.Nombre, fichaPrefab2D);
 
 
             //Boton Tablero 2D
 
             GameObject fichaBTNCasilla2D = Instantiate(prefabsBotonFicha2D);
+            
             Image ColorBotonBTN2D = fichaBTNCasilla2D.gameObject.GetComponentInChildren<Image>();
             ColorBotonBTN2D.color = color;
 
@@ -1081,13 +1027,21 @@ public class VentanaTablero3D : MonoBehaviour
             CambiarImagenJugador(ImagenBTNIcono2D.gameObject, ju.RutaImagen);
 
             fichaBTNCasilla2D.transform.SetParent(contenedorBotonFichas2D.transform, false);
+            
+            //Debug.Log("posicionFichaBoton: " + botonCasillas2D[110].GetComponent<RectTransform>().anchoredPosition);
             fichasBTN2D.Add(ju.Nombre, fichaBTNCasilla2D);
 
-            StartCoroutine(ObtenerPosicionCasilla(casillas2D[110], botonCasillas2D[110], (posicion,posicion2) =>
-            {
-                fichaPrefab2D.GetComponent<RectTransform>().anchoredPosition = posicion;
-                fichaBTNCasilla2D.GetComponent<RectTransform>().anchoredPosition = posicion2;
-            }));
+            fichaPrefab2D.SetActive(false); 
+            fichaBTNCasilla2D.SetActive(false); 
+
+               StartCoroutine(ObtenerPosicionCasilla(casillas2D[CalcularPosicionEnGrid(0)], botonCasillas2D[CalcularPosicionEnGrid(0)], (posicion,posicion2) =>
+               {
+                   fichaPrefab2D.GetComponent<RectTransform>().anchoredPosition = posicion;
+                   fichaBTNCasilla2D.GetComponent<RectTransform>().anchoredPosition = posicion2;
+
+                   fichaPrefab2D.SetActive(true);
+                   fichaBTNCasilla2D.SetActive(true);
+               }));
 
         }
 
@@ -1186,8 +1140,8 @@ public class VentanaTablero3D : MonoBehaviour
 
     void AsignarTextura(GameObject casilla, int indice, Texture2D fullImage, int gridSize)
     {
-        
-        if (indice == 0 || indice==120) {
+        //Debug.Log("indice: "+ indice+ " (filas*columnas)-1: "+ ((filas * columnas) - 1));
+        if (indice == 0 || indice== filas * columnas) {
             AsignarNumerosCasillas(indice, null);
         } else {
             // Calcula las dimensiones de la imagen dividida
@@ -1237,21 +1191,30 @@ public class VentanaTablero3D : MonoBehaviour
 
 
     }
-
+ 
     void AsignarNumerosCasillas(int posicionCasilla,Texture2D cellTexture)
     {
-        
-        if (posicionCasilla==0 || posicionCasilla == 120) {
+        Debug.Log($"filas * columnas: {filas * columnas} - NumeroCasilla {posicionCasilla}");
+        if (posicionCasilla==0 || posicionCasilla == (filas * columnas)-1) {
             GameObject salida2D = Instantiate(prefabsCasilla2DSalida);
             GameObject salidaBTN2D = Instantiate(prefabsCasilla2DSalida);
-            if (posicionCasilla == 0) { casillas2D.Add(110, salida2D); botonCasillas2D.Add(110, salidaBTN2D); }
-            if (posicionCasilla == 120) { casillas2D.Add(60, salida2D); botonCasillas2D.Add(60, salidaBTN2D); }
-            //Debug.Log("indice: " + posicionCasilla + " CalcularPosicionEnGrid(posicionCasilla): " + CalcularPosicionEnGrid(posicionCasilla));
+
+            if (posicionCasilla == 0) 
+            {
+                casillas2D.Add(CalcularPosicionEnGrid(posicionCasilla), salida2D);
+                botonCasillas2D.Add(CalcularPosicionEnGrid(posicionCasilla), salidaBTN2D);
+            }
+
+            if (posicionCasilla == (filas * columnas) - 1)
+            {
+                casillas2D.Add(CalcularPosicionEnGrid(posicionCasilla), salida2D);
+                botonCasillas2D.Add(CalcularPosicionEnGrid(posicionCasilla), salidaBTN2D); 
+            }
 
         } else {
             GameObject casilla2D = Instantiate(prefabsCasilla2D);
             GameObject casillaBTN2D = Instantiate(casillaBotonTablero2D);
-            //Debug.Log("numeroCasilla: "+ numeroCasilla+ " posicionCasilla: "+ posicionCasilla);
+
             casilla2D.GetComponentInChildren<TMP_Text>().text = posicionCasilla.ToString();
             casillaBTN2D.GetComponentInChildren<TMP_Text>().text = posicionCasilla.ToString();
 
@@ -1269,13 +1232,11 @@ public class VentanaTablero3D : MonoBehaviour
             Image casillaBTNImage = casillaBTN2D.GetComponent<Image>();
             casillaBTNImage.sprite = casillaSprite;
 
-            //Debug.Log("CalcularPosicionEnGrid(posicionCasilla): " + CalcularPosicionEnGrid(posicionCasilla)+ " posicionCasilla: " + posicionCasilla);
-            //Debug.Log("indice: " + posicionCasilla + " CalcularPosicionEnGrid(posicionCasilla): " + CalcularPosicionEnGrid(posicionCasilla));
             casillas2D.Add(CalcularPosicionEnGrid(posicionCasilla), casilla2D);
             botonCasillas2D.Add(CalcularPosicionEnGrid(posicionCasilla), casillaBTN2D);
 
         }
-       
+        
     }
 
     void ColorNumeros(GameObject casilla2D,int i) {
@@ -1342,7 +1303,7 @@ public class VentanaTablero3D : MonoBehaviour
         for (int i = 0; i < filas * columnas; i++)
         {
             int posicionGrid = ((z * columnas) + x);
-            //Debug.Log($"x {x} z {z} posicionGrid {posicionGrid} indice {i}");
+
 
             if (!mapaEspiralAGrid.ContainsValue(posicionGrid)) // Evitar valores duplicados
             {
@@ -1356,7 +1317,6 @@ public class VentanaTablero3D : MonoBehaviour
             // Avanzar a la siguiente posición
             x += dx;
             z += dz;
-
 
 
             if (dx == 1 && x >= rightBound) 
@@ -1380,9 +1340,9 @@ public class VentanaTablero3D : MonoBehaviour
 
             }
 
-
-
         }
+
+        Debug.Log(mapaEspiralAGrid.Count);
     }
 
 
@@ -1391,46 +1351,43 @@ public class VentanaTablero3D : MonoBehaviour
         return mapaEspiralAGrid[indiceEspiral]; // Devuelve la posición correcta en el Grid
     }
 
+    void ConfigurarGridLayout()
+    {
+        GridLayoutGroup grid = contenedorCasilla2D.GetComponent<GridLayoutGroup>();
+        GridLayoutGroup gridBTN = contenedorBotonTablero2D.GetComponent<GridLayoutGroup>();
+        if (filas * columnas > 9 * 9) {
+            
+            grid.cellSize = new Vector2(91, 91); // Tamaño de cada celda
+            grid.constraintCount = 11; // Número máximo de columnas o filas, según el constraint
 
+            gridBTN.cellSize = new Vector2(31.81f, 31.81f); // Tamaño de cada celda
+            gridBTN.constraintCount = 11; // Número máximo de columnas o filas, según el constraint
 
+        } else if (filas * columnas < 9 * 9) {
+            grid.cellSize = new Vector2(142.86f, 142.86f); // Tamaño de cada celda
+            grid.constraintCount = 7; // Número máximo de columnas o filas, según el constraint
+
+            gridBTN.cellSize = new Vector2(50, 50); // Tamaño de cada celda
+            gridBTN.constraintCount = 7; // Número máximo de columnas o filas, según el constraint
+        } else {
+            grid.cellSize = new Vector2(111.12f, 111.12f); // Tamaño de cada celda
+            grid.constraintCount = 9; // Número máximo de columnas o filas, según el constraint
+
+            gridBTN.cellSize = new Vector2(38.89f, 38.89f); // Tamaño de cada celda
+            gridBTN.constraintCount = 11; // Número máximo de columnas o filas, según el constraint
+        }
+    }
     void GenerarTablero2D() {
+
+        ConfigurarGridLayout();
+
         foreach (int clave in casillas2D.Keys.OrderBy(k => k))
         {
-            
-            
-
-            //Debug.LogError("clave: "+ clave);
             casillas2D[clave].transform.SetParent(contenedorCasilla2D.transform, false);
             Vector2 posicionInicial = casillas2D[clave].GetComponent<RectTransform>().anchoredPosition;
 
-
             botonCasillas2D[clave].transform.SetParent(contenedorBotonTablero2D.transform, false);
         }
-
-
-
-        IEnumerator ObtenerPosicionesConRetraso()
-        {
-            yield return new WaitForEndOfFrame(); 
-            foreach (Transform hijo in contenedorCasilla2D.transform)
-            {
-                //Debug.Log($"Casilla: {hijo.gameObject.name}, Posición UI: {hijo.GetComponent<RectTransform>().anchoredPosition}");
-            }
-        }
-        StartCoroutine(ObtenerPosicionesConRetraso());
-
-        IEnumerator ObtenerPosicionesConRetrasoBTN()
-        {
-            yield return new WaitForEndOfFrame();
-            foreach (Transform hijo in contenedorBotonTablero2D.transform)
-            {
-                //Debug.Log($"Casilla: {hijo.gameObject.name}, Posición UI: {hijo.GetComponent<RectTransform>().anchoredPosition}");
-            }
-        }
-        StartCoroutine(ObtenerPosicionesConRetrasoBTN());
-
-        AñadirFicha2D();
-
     }
 
 
@@ -1556,16 +1513,6 @@ public class VentanaTablero3D : MonoBehaviour
         }
        
         return texture;
-    }
-
-    //Cambio de 2D a 3D y viceversa
-
-    void CambioDeDimension() {
-        //popupTablero2D.
-
-        //popup.
-
-
     }
 
     
@@ -1762,7 +1709,102 @@ public class VentanaTablero3D : MonoBehaviour
 
         coloresJu = managerBBDD.SelectAll<ColorJugadores>();
     }
-       
+
+
+    IEnumerator MovimientoHada()
+    {
+        // Posición y rotación relativa de la cámara de referencia
+        Vector3 destinoFinal = camaraReferencia.transform.localPosition;
+        Quaternion rotacionFinal = camaraReferencia.transform.localRotation;
+
+        // Posiciones relativas dentro del padre
+        Vector3 inicio = posicionesTablero[((filas * columnas) - 1)] + new Vector3(0, 5.1f, 0);
+        Vector3 alturaFinal = posicionesTablero[((filas * columnas) - 1)] + new Vector3(0, 10f, 0);
+
+        float suavizado = 1.5f;
+        Vector3 velocidad = Vector3.zero;
+
+        // Vista inicial girada 180° para que el hada mire en la dirección opuesta
+        Quaternion rotInicial = Quaternion.Euler(90f, 180f, 0f);
+        Quaternion rotFinal = Quaternion.Euler(40f, 180f, 0f);
+
+        camaraPopup.transform.localRotation = rotInicial;
+
+        float t = 0;
+        while (t < 1)
+        {
+            t += Time.deltaTime * suavizado;
+
+            //  Asegurar que la interpolación usa `localPosition`
+            camaraPopup.transform.localPosition = Vector3.Lerp(inicio, alturaFinal, t);
+
+            //  Levantar la mirada progresivamente mientras sube
+            camaraPopup.transform.localRotation = Quaternion.Lerp(rotInicial, rotFinal, t);
+
+            yield return null;
+        }
+
+        yield return new WaitForSeconds(0.3f);
+
+        //  Movimiento fluido de izquierda a derecha con el mismo sistema de coordenadas
+        Quaternion rotIzquierda = Quaternion.Euler(40f, 130f, 0f);
+        Quaternion rotDerecha = Quaternion.Euler(40f, 230f, 0f);
+
+        t = 0;
+        while (t < 1)
+        {
+            t += Time.deltaTime * suavizado;
+            camaraPopup.transform.localRotation = Quaternion.Lerp(rotFinal, rotIzquierda, t);
+            yield return null;
+        }
+
+        t = 0;
+        while (t < 1)
+        {
+            t += Time.deltaTime * suavizado;
+            camaraPopup.transform.localRotation = Quaternion.Lerp(rotIzquierda, rotDerecha, t);
+            yield return null;
+        }
+        // Mantener la vista en `rotDerecha` mientras avanza a la salida
+        t = 0;
+        while (t < 1)
+        {
+            t += Time.deltaTime * suavizado;
+            t = Mathf.Clamp01(t); // Asegurar que nunca avanza más allá del destino final
+
+            // Mover hasta destinoFinal sin sobrepasarlo
+            camaraPopup.transform.localPosition = Vector3.Lerp(alturaFinal, destinoFinal, t);
+
+            // Mantener la vista fija en rotDerecha mientras avanza
+            camaraPopup.transform.localRotation = rotDerecha;
+
+            yield return null;
+        }
+
+        // La posición ya está en destinoFinal, ahora hacemos la transición sin retroceso
+        t = 0;
+        while (t < 1) // Reducimos a 1 para que la transición final sea más precisa
+        {
+            t += Time.deltaTime * suavizado;
+
+            // Iniciamos desde la posición donde terminó el movimiento anterior
+            camaraPopup.transform.localPosition = Vector3.Lerp(camaraPopup.transform.localPosition, destinoFinal, Mathf.Clamp01(t));
+
+            // Transición natural a la rotación final
+            camaraPopup.transform.localRotation = Quaternion.Lerp(rotDerecha, rotacionFinal, Mathf.Clamp01(t));
+
+            yield return null;
+        }
+
+
+
+        popupTablero2D.gameObject.SetActive(false);
+        popupPreCarga.gameObject.SetActive(false);
+    }
+
+
+
+
 }
 
 
