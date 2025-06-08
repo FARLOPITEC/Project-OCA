@@ -17,6 +17,7 @@ public class ManagerJugadores : MonoBehaviour
     //Popup
     public TMP_Text tituloPopup;
     public GameObject popupJugador;
+    public GameObject popupAdvertenciaMinJugadores;
     public GameObject contenedorColores;
     public Image colorElegido;
     public Image imagenElegida;
@@ -93,7 +94,16 @@ public class ManagerJugadores : MonoBehaviour
 
         AñadirJugadoresBBDD();
         managerBBDD.CloseDatabase();
-        SceneManager.LoadScene("MenuModosDeJuego"); // Cambia por el nombre real de la escena
+
+        if (jugadores.Count < 2)
+        {
+            popupAdvertenciaMinJugadores.SetActive(true);
+        }
+        else
+        {
+            SceneManager.LoadScene("MenuModosDeJuego");
+        }
+
 
 
 
