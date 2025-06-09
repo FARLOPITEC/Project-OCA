@@ -7,8 +7,14 @@ using System.Linq;
 using TMPro;
 using Unity.Mathematics;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 using UnityEngine.UI;
+using static SeleccionMinijuegos;
+using static TMPro.SpriteAssetUtilities.TexturePacker_JsonArray;
+using static UnityEngine.EventSystems.EventTrigger;
 using static UnityEngine.Rendering.DebugUI;
+using Button = UnityEngine.UI.Button;
+using Random = UnityEngine.Random;
 
 public class VentanaTablero3D : MonoBehaviour
 {
@@ -23,6 +29,9 @@ public class VentanaTablero3D : MonoBehaviour
     public GameObject bordTableroPequeño;
     public GameObject contenedorCorazones;
     public GameObject popupPreCarga;
+    public GameObject popupTurno;
+    public GameObject popupGanador;
+    public GameObject popupOtraPartida;
     public GameObject camaraPopup;
     public GameObject camaraReferencia;
 
@@ -50,7 +59,8 @@ public class VentanaTablero3D : MonoBehaviour
         //Imagen en partes ---------------------------------------------------
 
 
-    public Texture2D fullImage; // La imagen completa
+    public Texture2D[] imagenesTableros; // La imagen completa
+    int numeroTablero;
 
 
         //Movimiento fichas---------------------------------------------------
@@ -120,12 +130,21 @@ public class VentanaTablero3D : MonoBehaviour
     public TMP_Text tiempoContador;
 
 
+
+
     ////BBDD------------------------------------------------------------------
     ClaseManagerBBDD managerBBDD;
     List<Jugador> jugBBDD;
 
     void Awake()
     {
+        //BBDD
+        string databasePath = Path.Combine(Application.persistentDataPath, "JuegOcaBBDD.db");
+        managerBBDD = new ClaseManagerBBDD(databasePath);
+        
+
+        CrearMinijuegos();
+        CargarConfigMinijugegos();
         GenerarMapaEspiralAGrid();
         //Tablero y Fichas
         GenerarTablero3D(filas, columnas);
@@ -150,13 +169,11 @@ public class VentanaTablero3D : MonoBehaviour
         //Lienzo
         CrearLienzo();
 
-        //BBDD
-        string databasePath = Path.Combine(Application.persistentDataPath, "JuegOcaBBDD.db");
-        managerBBDD = new ClaseManagerBBDD(databasePath);
 
         jugadores = new Dictionary<string, Jugador3D>();
         CargarJugadores();
         CargarColores();
+
 
 
         PersonalizarFicha();
@@ -174,7 +191,7 @@ public class VentanaTablero3D : MonoBehaviour
         MoverFicha2DAlFinal(fichas[jugadores[turnos[jugadorActual]].Ficha]);
         TurnoCamara(fichas[jugadores[turnos[jugadorActual]].Ficha]);
         VerificarSuperposicion();
-        
+
 
     }
 
@@ -194,6 +211,8 @@ public class VentanaTablero3D : MonoBehaviour
 
     void GenerarTablero3D(int filas, int columnas)
     {
+
+        Debug.Log("filas: "+ filas+ " columnas: "+ columnas);
         float tamano = 5.1f; // Tamaño de cada cubo
         int x = 0, z = 0; // Posición inicial
         int dx = 1, dz = 0; // Dirección inicial
@@ -273,14 +292,14 @@ public class VentanaTablero3D : MonoBehaviour
                 casilla = Instantiate(prefabCasSal, posicionCasilla, rotacionO);
 
             }
-            else if (i== filas * columnas) {
+            else if (i== (filas * columnas)-1) {
                 casilla = Instantiate(prefabCasSal, posicionCasilla, rotacionO);
             }
             else {
                 casilla = Instantiate(prefabCasNorm, posicionCasilla, rotacionO);
             }
 
- 
+            
 
             TextMeshPro textComponent = casilla.GetComponentInChildren<TextMeshPro>();
             if (textComponent != null)
@@ -302,23 +321,23 @@ public class VentanaTablero3D : MonoBehaviour
                 if (i < filas * columnas * porcentaje[0])
                 {
                     textComponent.color = Color.cyan;
-                    AsignarTextura(casilla, i, fullImage, filas);
+                    AsignarTextura(casilla, i, imagenesTableros[numeroTablero], filas);
                 }
                 else if (i < filas * columnas * porcentaje[1])
                 {
                     textComponent.color = Color.blue;
-                    AsignarTextura(casilla, i, fullImage, filas);
+                    AsignarTextura(casilla, i, imagenesTableros[numeroTablero], filas);
                 }
 
                 else if (i < filas * columnas * porcentaje[2])
                 {
                     textComponent.color = Color.yellow;
-                    AsignarTextura(casilla, i, fullImage, filas);
+                    AsignarTextura(casilla, i, imagenesTableros[numeroTablero], filas);
                 }
                 else if (i < filas * columnas * porcentaje[3])
                 {
                     textComponent.color = Color.red;
-                    AsignarTextura(casilla, i, fullImage, filas);
+                    AsignarTextura(casilla, i, imagenesTableros[numeroTablero], filas);
                 }
                 else if (i == filas * columnas || i == 0)
                 {
@@ -327,7 +346,7 @@ public class VentanaTablero3D : MonoBehaviour
                 else
                 {
                     textComponent.color = Color.black;
-                    AsignarTextura(casilla, i, fullImage, filas);
+                    AsignarTextura(casilla, i, imagenesTableros[numeroTablero], filas);
                 }
 
             }
@@ -876,6 +895,7 @@ public class VentanaTablero3D : MonoBehaviour
             yield return new WaitForSeconds(0.5f);
             
             MoverAFicha(NumeroActual);
+
             
 
             ResetearDado(); // Resetea el dado después del tiempo necesario
@@ -892,7 +912,7 @@ public class VentanaTablero3D : MonoBehaviour
             if (caras[i].TocaSuelo)
             {
                 NumeroActual = 7 - caras[i].Numero;
-                Debug.Log("El resultado del dado es: " + NumeroActual);
+               // Debug.Log("El resultado del dado es: " + NumeroActual);
                 
 
             }
@@ -905,6 +925,8 @@ public class VentanaTablero3D : MonoBehaviour
     {
         StartCoroutine(MoverFicha2DPasoAPaso(jugadorActual, resultadoDado));
         StartCoroutine(MoverFichaPasoAPaso(jugadorActual, resultadoDado));
+        
+
 
     }
 
@@ -954,7 +976,7 @@ public class VentanaTablero3D : MonoBehaviour
 
                 }
             }
-
+            MostrarPopupGanador();
             jugadorActual = siguienteJugador(jugador);
             TurnoCamara(fichas[jugadores[turnos[jugadorActual]].Ficha]);
 
@@ -963,7 +985,10 @@ public class VentanaTablero3D : MonoBehaviour
             MarcoJugador();
 
         }
-        block=false;
+        
+        MostrarCarta(RamdomMinijuego());
+
+        block =false;
     }
 
     IEnumerator RotarCamaraSuavemente(float anguloRot)
@@ -1141,7 +1166,7 @@ public class VentanaTablero3D : MonoBehaviour
     void AsignarTextura(GameObject casilla, int indice, Texture2D fullImage, int gridSize)
     {
         //Debug.Log("indice: "+ indice+ " (filas*columnas)-1: "+ ((filas * columnas) - 1));
-        if (indice == 0 || indice== filas * columnas) {
+        if (indice == 0 || indice== (filas * columnas) - 1) {
             AsignarNumerosCasillas(indice, null);
         } else {
             // Calcula las dimensiones de la imagen dividida
@@ -1194,7 +1219,7 @@ public class VentanaTablero3D : MonoBehaviour
  
     void AsignarNumerosCasillas(int posicionCasilla,Texture2D cellTexture)
     {
-        Debug.Log($"filas * columnas: {filas * columnas} - NumeroCasilla {posicionCasilla}");
+        //Debug.Log($"filas * columnas: {filas * columnas} - NumeroCasilla {posicionCasilla}");
         if (posicionCasilla==0 || posicionCasilla == (filas * columnas)-1) {
             GameObject salida2D = Instantiate(prefabsCasilla2DSalida);
             GameObject salidaBTN2D = Instantiate(prefabsCasilla2DSalida);
@@ -1374,7 +1399,7 @@ public class VentanaTablero3D : MonoBehaviour
             grid.constraintCount = 9; // Número máximo de columnas o filas, según el constraint
 
             gridBTN.cellSize = new Vector2(38.89f, 38.89f); // Tamaño de cada celda
-            gridBTN.constraintCount = 11; // Número máximo de columnas o filas, según el constraint
+            gridBTN.constraintCount = 9; // Número máximo de columnas o filas, según el constraint
         }
     }
     void GenerarTablero2D() {
@@ -1464,11 +1489,6 @@ public class VentanaTablero3D : MonoBehaviour
 
 
 
-    public void AccionImagen() {
-
-        CambiarImagen(contador, fullImage,5);
-        contador++;
-    }
 
     Color[] RotarPixels180(Color[] pixels, int width, int height)
     {
@@ -1800,10 +1820,566 @@ public class VentanaTablero3D : MonoBehaviour
 
         popupTablero2D.gameObject.SetActive(false);
         popupPreCarga.gameObject.SetActive(false);
+
+        MostrarPopupTurno();
+    }
+    //PopUp Turno
+
+    IEnumerator ActivarPopupTurno()
+    {
+        ColorUtility.TryParseHtmlString(jugadores[turnos[jugadorActual]].ColorIcono, out Color color2);
+
+        popupTurno.transform.Find("Contenedor").GetComponent<Image>().color = color2;
+        popupTurno.GetComponentInChildren<TMP_Text>().text="¡¡Te toca\n"+ jugadores[turnos[jugadorActual]].Nombre+"!!";
+
+        popupTurno.SetActive(true);
+        yield return new WaitForSeconds(2); // Espera 2 segundos
+        popupTurno.SetActive(false);
+    }
+    void MostrarPopupTurno()
+    {
+        StartCoroutine(ActivarPopupTurno());
+    }
+
+    void MostrarPopupGanador()
+    {
+        foreach (KeyValuePair<string, Jugador3D> ju in jugadores) {
+            if (ju.Value.Posicion >= (filas*columnas)-1) {
+                Debug.Log("ju.Value.Posicion: " + ju.Value.Posicion);
+                popupGanador.GetComponentInChildren<TMP_Text>().text = "¡¡Has ganado\n" + jugadores[turnos[jugadorActual]].Nombre + "!!";
+                popupGanador.SetActive(true);
+                
+            }
+        }
+
+    }
+
+    public void ContinuarFinal()
+    {
+ 
+        popupGanador.SetActive(false);
+        popupOtraPartida.SetActive(true);
     }
 
 
 
+    public void OtraPartida() {
+
+        SceneManager.LoadScene(SceneManager.GetActiveScene().name);
+
+    }
+
+
+ 
+    public void Salir()
+    {
+        SceneManager.LoadScene("MenuTableros");
+
+    }
+
+    ////Minijuegos------------------------------------------------------------------------------------------------------------------------------------
+
+    //Crear Minijuegos
+    void CrearMinijuegos() {
+        MinijuegoTablero miju1 = new MinijuegoTablero("Quien es mas probable", "#F700FF", "CSV/MasProbable");
+        MinijuegoTablero miju2 = new MinijuegoTablero("Yo nunca", "#00FF10", "CSV/YoNunca");
+        MinijuegoTablero miju3 = new MinijuegoTablero("Verdad", "#2E00FF", "CSV/verdad");
+        MinijuegoTablero miju4 = new MinijuegoTablero("3 Palabras", "#1F552B", "CSV/3Palabras");
+        MinijuegoTablero miju5 = new MinijuegoTablero("Reto", "#00FF81", "CSV/reto");
+        MinijuegoTablero miju6 = new MinijuegoTablero("Beber", "#FFF700", "CSV/beber");
+        MinijuegoTablero miju7 = new MinijuegoTablero("Quien fue", "#FFA200", "CSV/QuienFue");
+        MinijuegoTablero miju8 = new MinijuegoTablero("Quien es mas probable +18", "#F700FF", "CSV/MasProbable18");
+        MinijuegoTablero miju9 = new MinijuegoTablero("Yo nunca +18", "#00FF10", "CSV/YoNunca18");
+        MinijuegoTablero miju10 = new MinijuegoTablero("Verdad +18", "#2E00FF", "CSV/verdad18");
+        MinijuegoTablero miju11 = new MinijuegoTablero("3 Palabras +18", "#1F552B", "CSV/3Palabras18");
+        MinijuegoTablero miju12 = new MinijuegoTablero("Hot", "#FF0000", "CSV/hot");
+
+        miniJuegos.Add(miju1.nombre, miju1);
+        miniJuegos.Add(miju2.nombre, miju2);
+        miniJuegos.Add(miju3.nombre, miju3);
+        miniJuegos.Add(miju4.nombre, miju4);
+        miniJuegos.Add(miju5.nombre, miju5);
+        miniJuegos.Add(miju6.nombre, miju6);
+        miniJuegos.Add(miju7.nombre, miju7);
+        miniJuegos.Add(miju8.nombre, miju8);
+        miniJuegos.Add(miju9.nombre, miju9);
+        miniJuegos.Add(miju10.nombre, miju10);
+        miniJuegos.Add(miju11.nombre, miju11);
+        miniJuegos.Add(miju12.nombre, miju12);
+
+        int cont = 0;
+        foreach (KeyValuePair<string, MinijuegoTablero> mj in miniJuegos) {
+
+            
+            cartas.Add(mj.Key, prefabsCartas[cont]);
+            cont++;
+        }
+
+    }
+
+
+    //PrefabsCartas
+    Dictionary<int, string> numeroMJ = new Dictionary<int, string>();
+    Dictionary<string, MinijuegoTablero> miniJuegos = new Dictionary<string, MinijuegoTablero>();
+    List<ConfiguracionTablero> configMinijuegos = new List<ConfiguracionTablero>();
+    Dictionary<string, List<string>> cartasCSV = new Dictionary<string, List<string>>();
+    public GameObject[] prefabsCartas;
+    Dictionary<string, GameObject> cartas = new Dictionary<string, GameObject>();
+    public RectTransform contenedorCartas;
+    public GameObject popupMinijuegos;
+    public GameObject botonPopup;
+    public TMP_Text tituloPopupMiniJuegos;
+
+    //Mostras cartas
+    string RamdomMinijuego()
+    {
+        return numeroMJ[Random.Range(0, numeroMJ.Count)];
+    }
+    private void MostrarCarta(string minijuego)
+    {
+        Debug.Log("miniJuegos[minijuego].color: " + miniJuegos[minijuego].color);
+        ColorUtility.TryParseHtmlString(miniJuegos[minijuego].color, out Color color1);
+        botonPopup.GetComponent<Image>().color = color1;
+        tituloPopupMiniJuegos.text = minijuego;
+
+        popupMinijuegos.SetActive(true);
+
+        GameObject cartaActiva;
+        foreach (Transform child in contenedorCartas)
+            Destroy(child.gameObject);
+
+        
+
+        cartaActiva = Instantiate(cartas[miniJuegos[minijuego].nombre], contenedorCartas);
+        RectTransform rect = cartaActiva.GetComponent<RectTransform>();
+
+        if (rect != null)
+        {
+            rect.anchorMin = new Vector2(0.5f, 0.5f);
+            rect.anchorMax = new Vector2(0.5f, 0.5f);
+            rect.pivot = new Vector2(0.5f, 0.5f);
+            rect.anchoredPosition = new Vector2(-Screen.width, 0);
+            rect.localScale = Vector3.one;
+
+            LeanTween.moveX(rect, 0f, 0.5f).setEaseOutExpo();
+        }
+
+        if (cartasCSV[miniJuegos[minijuego].nombre] != null)
+        {
+            string[] lineas = cartasCSV[miniJuegos[minijuego].nombre].ToArray();
+            int numero= Random.Range(0, lineas.Length);
+            string frase = lineas[numero].Trim();
+
+            cartasCSV[miniJuegos[minijuego].nombre].RemoveAt(numero);
+
+            var txt = cartaActiva.GetComponentInChildren<TextMeshProUGUI>();
+            if (txt != null)
+                txt.text = frase;
+        }
+
+        Button btn = cartaActiva.GetComponent<Button>();
+        if (btn != null)
+        {
+            btn.onClick.RemoveAllListeners();
+            btn.onClick.AddListener(() =>
+            {
+                RectTransform r = cartaActiva.GetComponent<RectTransform>();
+                if (r != null)
+                {
+                    LeanTween.moveX(r, Screen.width, 0.4f).setEaseInExpo().setOnComplete(() =>
+                    {
+                        Destroy(cartaActiva);
+                        cartaActiva = null;
+                    });
+                }
+            });
+        }
+        
+    }
+
+    public void Continuar() { 
+    
+        popupMinijuegos.SetActive(false);
+
+        MostrarPopupTurno();
+    }
+    //Cargar MiniJuegos
+    void CargarCSV(string rutaRecursos, List<string> listaDestino)
+    {
+        TextAsset archivo = Resources.Load<TextAsset>(rutaRecursos);
+        if (archivo != null)
+        {
+            string[] lineas = archivo.text.Split('\n');
+            foreach (string linea in lineas)
+            {
+                string pregunta = linea.Trim();
+                if (!string.IsNullOrEmpty(pregunta))
+                    listaDestino.Add(pregunta);
+            }
+        }
+        else
+        {
+            Debug.LogError("No se encontró el archivo en: " + rutaRecursos);
+        }
+    }
+
+    void CargarConfigMinijugegos() {
+
+        configMinijuegos = managerBBDD.SelectAll<ConfiguracionTablero>();
+
+        for (int i = 0; i < configMinijuegos.Count; i++) {
+            Debug.Log("tablero: " + configMinijuegos[i].tablero.ToUpper()+ " minijuegos: " + configMinijuegos[i].minijuegos + " minijuegos18: " + configMinijuegos[i].minijuegos18 + " tamaño: " + configMinijuegos[i].tamaño);
+        }
+        if (configMinijuegos[0].tamaño.Contains("grande")) { filas = 11;columnas = 11; Debug.Log("ToggleGrande"); }
+        else if (configMinijuegos[0].tamaño.Contains("mediano")) { filas = 9; columnas = 9; Debug.Log("ToggleMediano "); }
+        else if (configMinijuegos[0].tamaño.Contains("pequeño")) { filas = 7; columnas = 7; Debug.Log("TogglePequeño"); }
+
+
+        if (configMinijuegos[0].tablero.ToUpper().Equals("CLASICO")) numeroTablero = 0;
+            else if (configMinijuegos[0].tablero.ToUpper().Equals("ETILICO")) numeroTablero = 1;
+            else if (configMinijuegos[0].tablero.ToUpper().Equals("HOT")) numeroTablero = 2;
+            else if (configMinijuegos[0].tablero.ToUpper().Equals("PAREJA")) numeroTablero = 3;
+            else if (configMinijuegos[0].tablero.ToUpper().Equals("GIGANTE")) numeroTablero = 4;
+
+        string[] minijuegos = configMinijuegos[0].minijuegos.Split(':', StringSplitOptions.RemoveEmptyEntries);
+        string[] minijuegos18 = configMinijuegos[0].minijuegos18.Split(':', StringSplitOptions.RemoveEmptyEntries);
+        int cont = 0;
+        foreach (string minijuego in minijuegos) {
+
+            List<string> cvs = new List<string>();
+            CargarCSV(miniJuegos[minijuego].rutaArchivoCSV,cvs);
+            cartasCSV.Add(minijuego, cvs);
+            numeroMJ.Add(cont,minijuego);
+            cont++;
+        }
+
+        foreach (string mj18 in minijuegos18)
+        {
+            string nombre="";
+            int opc =int.Parse(mj18);
+            //Debug.LogError(mj18);
+            if (opc == 0) nombre = "Quien es mas probable +18";
+            else if (opc == 1) nombre = "Yo nunca +18";
+            else if(opc == 2) nombre = "Verdad +18";
+            else if(opc == 3) nombre = "3 Palabras +18";
+            else if (opc == 4) nombre = "Hot";
+
+            if (opc>0) {
+                List<string> cvs = new List<string>();
+
+                CargarCSV(miniJuegos[nombre].rutaArchivoCSV, cvs);
+                cartasCSV.Add(nombre, cvs);
+
+                numeroMJ.Add(cont, nombre);
+                cont++;
+            }
+
+        }
+
+    }
+
+
+
+
+
+    //3 Cartas, Mas Probable, Quien fue, Yo nunca--------------------------------------------------------------------------------------------------------------------
+    /*
+      private List<string> frases = new List<string>();
+      private RectTransform cartaRect;
+
+      private float duracion = 0.4f;
+      private Vector2 centro = Vector2.zero;
+      private Vector2 derecha = new Vector2(2000, 0);
+      private Vector2 izquierda = new Vector2(-2000, 0);
+
+      private bool bloqueado = false;
+
+      public void MostrarCarta()
+      {
+          if (bloqueado || frases.Count == 0) return;
+          StartCoroutine(AnimarCarta());
+      }
+
+      private IEnumerator AnimarCarta()
+      {
+          bloqueado = true;
+
+          int index = Random.Range(0, frases.Count);
+          textoCarta.text = frases[index];
+
+          if (carta.activeSelf)
+          {
+              LeanTween.move(cartaRect, derecha, duracion).setOnComplete(() =>
+              {
+                  cartaRect.anchoredPosition = izquierda;
+                  LeanTween.move(cartaRect, centro, duracion);
+              });
+          }
+          else
+          {
+              carta.SetActive(true);
+              cartaRect.anchoredPosition = izquierda;
+              LeanTween.move(cartaRect, centro, duracion);
+          }
+
+          yield return new WaitForSeconds(1f);
+          bloqueado = false;
+      }
+
+      //Verdad o Reto-------------------------------------------------------------------------------------------------------------------------
+
+      public GameObject cartaVerdad;
+      public GameObject cartaReto;
+
+      public TextMeshProUGUI txtCartaVerdad;
+      public TextMeshProUGUI txtCartaReto;
+
+      private List<string> preguntasVerdad = new List<string>();
+      private List<string> preguntasReto = new List<string>();
+
+      private RectTransform cartaVerdadRect;
+      private RectTransform cartaRetoRect;
+
+
+      public void MostrarVerdad()
+      {
+          if (bloqueado || preguntasVerdad.Count == 0) return;
+          StartCoroutine(AnimarCarta("verdad"));
+      }
+
+      public void MostrarReto()
+      {
+          if (bloqueado || preguntasReto.Count == 0) return;
+          StartCoroutine(AnimarCarta("reto"));
+      }
+
+      private IEnumerator AnimarCarta(string tipo)
+      {
+          bloqueado = true;
+
+          if (tipo == "verdad")
+          {
+              int index = Random.Range(0, preguntasVerdad.Count);
+              txtCartaVerdad.text = preguntasVerdad[index];
+
+              if (cartaVerdad.activeSelf)
+              {
+                  LeanTween.move(cartaVerdadRect, derecha, duracion).setOnComplete(() =>
+                  {
+                      cartaVerdadRect.anchoredPosition = izquierda;
+                      LeanTween.move(cartaVerdadRect, centro, duracion);
+                  });
+              }
+              else
+              {
+                  if (cartaReto.activeSelf)
+                  {
+                      LeanTween.move(cartaRetoRect, derecha, duracion).setOnComplete(() =>
+                      {
+                          cartaReto.SetActive(false);
+                      });
+                  }
+
+                  cartaVerdad.SetActive(true);
+                  cartaVerdadRect.anchoredPosition = izquierda;
+                  LeanTween.move(cartaVerdadRect, centro, duracion);
+              }
+          }
+          else if (tipo == "reto")
+          {
+              int index = Random.Range(0, preguntasReto.Count);
+              txtCartaReto.text = preguntasReto[index];
+
+              if (cartaReto.activeSelf)
+              {
+                  LeanTween.move(cartaRetoRect, derecha, duracion).setOnComplete(() =>
+                  {
+                      cartaRetoRect.anchoredPosition = izquierda;
+                      LeanTween.move(cartaRetoRect, centro, duracion);
+                  });
+              }
+              else
+              {
+                  if (cartaVerdad.activeSelf)
+                  {
+                      LeanTween.move(cartaVerdadRect, derecha, duracion).setOnComplete(() =>
+                      {
+                          cartaVerdad.SetActive(false);
+                      });
+                  }
+
+                  cartaReto.SetActive(true);
+                  cartaRetoRect.anchoredPosition = izquierda;
+                  LeanTween.move(cartaRetoRect, centro, duracion);
+              }
+          }
+
+          yield return new WaitForSeconds(1f);
+          bloqueado = false;
+      }
+    */
+
+    //Botella----------------------------------------------------------------------------------------------------------------
+    /*
+    public RectTransform botella;
+    public RectTransform ruletaTransform;
+    public GameObject sectorPrefab;
+    public RectTransform contenedorCartas;
+
+    public float duracionGiro = 3f;
+
+    private bool girando = false;
+    private List<GameObject> sectores = new List<GameObject>();
+    private GameObject cartaActiva;
+    List<MinijuegoTablero> miniJuegosRuleta = new List<MinijuegoTablero>();
+    Dictionary<string, List<string>> cartasRuleta = new Dictionary<string, List<string>>();
+
+    
+    
+    public void CrearRuleta()
+    {
+        foreach (var sector in sectores)
+        {
+            Destroy(sector);
+        }
+        sectores.Clear();
+
+        int cantidad = miniJuegosRuleta.Count;
+        if (cantidad == 0) return;
+
+        float anguloSector = 360f / cantidad;
+
+        for (int i = 0; i < cantidad; i++)
+        {
+            var data = miniJuegosRuleta[i];
+
+            GameObject sector = Instantiate(sectorPrefab, ruletaTransform);
+            sector.transform.localRotation = Quaternion.Euler(0, 0, -i * anguloSector);
+            sector.GetComponent<Image>().fillAmount = 1f / cantidad;
+
+            ColorUtility.TryParseHtmlString(data.color, out Color color);
+            sector.GetComponent<Image>().color = color;
+
+            sectores.Add(sector);
+
+            List<string> textos = new List<string>();
+            CargarCSV(miniJuegosRuleta[i].rutaArchivoCSV, textos);
+
+            cartasRuleta.Add(miniJuegosRuleta[i].nombre, textos);
+
+        }
+    }
+
+    public void GirarBotella()
+    {
+        if (girando) return;
+
+        if (cartaActiva != null)
+        {
+            RectTransform rect = cartaActiva.GetComponent<RectTransform>();
+            if (rect != null)
+            {
+                LeanTween.moveX(rect, Screen.width, 0.4f).setEaseInExpo().setOnComplete(() =>
+                {
+                    Destroy(cartaActiva);
+                    cartaActiva = null;
+                    StartCoroutine(Girar());
+                });
+                return;
+            }
+            else
+            {
+                Destroy(cartaActiva);
+                cartaActiva = null;
+            }
+        }
+
+        StartCoroutine(Girar());
+    }
+
+    private IEnumerator Girar()
+    {
+        girando = true;
+
+        float anguloInicial = botella.eulerAngles.z;
+        float anguloFinal = Random.Range(0f, 360f) + 360f * 5;
+        float tiempo = 0f;
+
+        while (tiempo < duracionGiro)
+        {
+            float t = tiempo / duracionGiro;
+            float angulo = Mathf.Lerp(anguloInicial, anguloFinal, Mathf.SmoothStep(0f, 1f, t));
+            botella.rotation = Quaternion.Euler(0f, 0f, angulo);
+            tiempo += Time.deltaTime;
+            yield return null;
+        }
+
+        botella.rotation = Quaternion.Euler(0f, 0f, anguloFinal % 360f);
+
+        yield return new WaitForSeconds(0.5f);
+
+        Vector2 direccion = botella.up;
+        float anguloBotella = Mathf.Atan2(direccion.y, direccion.x) * Mathf.Rad2Deg;
+        anguloBotella = (450f - anguloBotella) % 360f;
+
+        int cantidad = SeleccionMinijuegos.miniJuegos.Count;
+        float anguloPorSector = 360f / cantidad;
+        int index = Mathf.FloorToInt(anguloBotella / anguloPorSector);
+
+        MostrarCarta(index);
+        girando = false;
+    }
+
+    private void MostrarCarta(int index)
+    {
+        foreach (Transform child in contenedorCartas)
+            Destroy(child.gameObject);
+
+        var data = miniJuegosRuleta[index];
+
+        cartaActiva = Instantiate(cartas[miniJuegosRuleta[index].nombre], contenedorCartas);
+        RectTransform rect = cartaActiva.GetComponent<RectTransform>();
+
+        if (rect != null)
+        {
+            rect.anchorMin = new Vector2(0.5f, 0.5f);
+            rect.anchorMax = new Vector2(0.5f, 0.5f);
+            rect.pivot = new Vector2(0.5f, 0.5f);
+            rect.anchoredPosition = new Vector2(-Screen.width, 0);
+            rect.localScale = Vector3.one;
+
+            LeanTween.moveX(rect, 0f, 0.5f).setEaseOutExpo();
+        }
+        
+        if (data.archivoCSV != null)
+        {
+            string[] lineas = data.archivoCSV.text.Split('\n');
+            string frase = lineas[Random.Range(0, lineas.Length)].Trim();
+
+            var txt = cartaActiva.GetComponentInChildren<TextMeshProUGUI>();
+            if (txt != null)
+                txt.text = frase;
+        }
+        
+        Button btn = cartaActiva.GetComponent<Button>();
+        if (btn != null)
+        {
+            btn.onClick.RemoveAllListeners();
+            btn.onClick.AddListener(() =>
+            {
+                RectTransform r = cartaActiva.GetComponent<RectTransform>();
+                if (r != null)
+                {
+                    LeanTween.moveX(r, Screen.width, 0.4f).setEaseInExpo().setOnComplete(() =>
+                    {
+                        Destroy(cartaActiva);
+                        cartaActiva = null;
+                    });
+                }
+            });
+        }
+    }
+*/
 
 }
 

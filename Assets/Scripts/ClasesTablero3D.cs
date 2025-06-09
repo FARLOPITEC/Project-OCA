@@ -98,3 +98,21 @@ public class Casilla2D
         Imagen = imagen;
     }
 }
+
+//MiniJuegos------------------------------------------------------------------------------
+public class MinijuegoTablero
+{
+    public string nombre;
+    public string color;
+    public string rutaArchivoCSV;
+
+    public MinijuegoTablero(string nombre, string color, string rutaArchivoCSV)
+    {
+        this.nombre = nombre;
+        this.color = color;
+        this.rutaArchivoCSV = rutaArchivoCSV;
+    }
+}
+
+
+

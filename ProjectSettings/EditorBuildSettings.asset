@@ -36,6 +36,6 @@ EditorBuildSettings:
     path: Assets/Scenes/MiniJuego3Cartas.unity
     guid: 7f592f76408a6464f8112b91c39bbdbb
   - enabled: 1
-    path: Assets/Scenes/Tablero 2D.unity
-    guid: 4fedaa17af06dd440a6789022f8f28ad
+    path: Assets/Scenes/GenerarTablero.unity
+    guid: 502c519be5f1b3e4aab87a7da3cdff47
   m_configObjects: {}
