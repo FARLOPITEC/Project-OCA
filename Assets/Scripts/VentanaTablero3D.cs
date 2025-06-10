@@ -87,6 +87,7 @@ public class VentanaTablero3D : MonoBehaviour
     public float anguloRotacion = -90f;
 
     bool block=false;
+    bool blockBotonVista = false;
 
     bool hayOtraFichaEnMismaCasilla = false;
 
@@ -790,18 +791,16 @@ public class VentanaTablero3D : MonoBehaviour
         {
             if (PopupDado.activeSelf)
             {
-
                 block = true;
 
-                
-                
                 FisicasDado();
                 StartCoroutine(EsperarPararDado());
                 
             }
             else {
                 fichas[jugadores[turnos[jugadorActual]].Ficha].transform.Find("CameraFicha").gameObject.SetActive(false);
-
+                
+                blockBotonVista = true;
                 PopupDado.SetActive(true);
                 if (Boton3D.activeSelf) popupTablero2D.SetActive(false);
             }
@@ -829,25 +828,29 @@ public class VentanaTablero3D : MonoBehaviour
 
     public void CambiarVistaTablero()
     {
-        if (popupTablero2D.activeSelf)
-        {
-            TurnoCamara(fichas[jugadores[turnos[jugadorActual]].Ficha]);
+        if (!blockBotonVista) {
+            if (popupTablero2D.activeSelf)
+            {
+                TurnoCamara(fichas[jugadores[turnos[jugadorActual]].Ficha]);
 
-            Boton2D.SetActive(true);
-            popupTablero2D.SetActive(false);
-            Boton3D.SetActive(false);
-            noCamera.SetActive(false);
+                Boton2D.SetActive(true);
+                popupTablero2D.SetActive(false);
+                Boton3D.SetActive(false);
+                noCamera.SetActive(false);
 
+            }
+            else
+            {
+                DesactivarCamaras();
+
+                Boton2D.SetActive(false);
+                popupTablero2D.SetActive(true);
+                Boton3D.SetActive(true);
+                noCamera.SetActive(true);
+
+            }
         }
-        else {
-            DesactivarCamaras();
-            
-            Boton2D.SetActive(false);
-            popupTablero2D.SetActive(true);
-            Boton3D.SetActive(true);
-            noCamera.SetActive(true);
-
-        }
+        
 
     }
 
@@ -2028,6 +2031,7 @@ public class VentanaTablero3D : MonoBehaviour
     
         popupMinijuegos.SetActive(false);
         block = false;
+        blockBotonVista = false;
         MostrarPopupTurno();
     }
     //Cargar MiniJuegos
