@@ -83,7 +83,11 @@ public class ManagerMenuTableros : MonoBehaviour
 
     }
 
+    public void VolverEscena()
+    {
+        SceneManager.LoadScene("MenuModosDeJuego");
 
+    }
 
 
 

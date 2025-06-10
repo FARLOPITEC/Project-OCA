@@ -102,7 +102,7 @@ public class ManagerJugadores : MonoBehaviour
 
         }
 
-        if (config != null && config[0].continuarPartida.Equals("S"))
+        if (config != null && config.Count != 0 && config[0].continuarPartida.Equals("S"))
         {
 
             popupContinuarPartida.gameObject.SetActive(true);
