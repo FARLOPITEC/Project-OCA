@@ -1,7 +1,13 @@
 fileFormatVersion: 2
+<<<<<<<< HEAD:Assets/StreamingAssets/JuegOcaBBDD.db.meta
 guid: b7c6202dd6b50994dbd8b93b06808f38
 DefaultImporter:
+========
+guid: f55f712d1684558419790ee1d770da48
+NativeFormatImporter:
+>>>>>>>> Rama-Main2:Assets/Fonts/Title/LilitaOne-Regular SDF 1.asset.meta
   externalObjects: {}
+  mainObjectFileID: 11400000
   userData: 
   assetBundleName: 
   assetBundleVariant: 

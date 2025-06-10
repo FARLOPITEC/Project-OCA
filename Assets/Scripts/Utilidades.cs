@@ -6,6 +6,8 @@ using UnityEngine.SceneManagement;
 public class Utilidades : MonoBehaviour
 {
     // Start is called before the first frame update
+
+    public GameObject imgDifuminado;
     void Start()
     {
 
@@ -88,6 +90,11 @@ public class Utilidades : MonoBehaviour
         SceneManager.LoadScene("");
     }
 
+    public void ChangeScene(string sceneName)
+    {
+        SceneManager.LoadScene(sceneName);
+    }
+
 
 
 
@@ -95,13 +102,15 @@ public class Utilidades : MonoBehaviour
     public void MostrarPopup(GameObject popup)
     {
         if (popup != null)
-            popup.SetActive(true);
+            imgDifuminado.SetActive(true);
+        popup.SetActive(true);
     }
 
     public void OcultarPopup(GameObject popup)
     {
         if (popup != null)
-            popup.SetActive(false);
+            imgDifuminado.SetActive(false);
+        popup.SetActive(false);
     }
 
     public void OcultarPopupDerecha(GameObject popup)
@@ -113,6 +122,7 @@ public class Utilidades : MonoBehaviour
 
             LeanTween.move(rect, destino, 0.4f).setOnComplete(() =>
             {
+                imgDifuminado.SetActive(false);
                 popup.SetActive(false);
             });
         }
