@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.IO;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -19,6 +20,10 @@ public class SeleccionMinijuegos : MonoBehaviour
 
     public static List<MinijuegoData> minijuegosSeleccionados = new List<MinijuegoData>();
 
+    void Start()
+    {
+  
+    }
     public void Jugar()
     {
         minijuegosSeleccionados.Clear();
@@ -41,4 +46,5 @@ public class SeleccionMinijuegos : MonoBehaviour
 
         UnityEngine.SceneManagement.SceneManager.LoadScene(escenaRuleta);
     }
+
 }

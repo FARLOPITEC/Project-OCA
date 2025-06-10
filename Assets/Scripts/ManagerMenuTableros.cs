@@ -1,8 +1,7 @@
 using SQLite;
-using System.Collections;
+using System;
 using System.Collections.Generic;
 using System.IO;
-using Unity.Android.Types;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.SceneManagement;
@@ -12,7 +11,7 @@ using static SeleccionMinijuegos;
 public class ManagerMenuTableros : MonoBehaviour
 {
     
-    ClaseManagerBBDD managerBBDD;
+
     List<ConfiguracionTablero> configuracionTableros;
     public Toggle[] opcionesTamaños = new Toggle[0];
     public Toggle[] opcionesMinijuegos = new Toggle[0];
@@ -24,14 +23,26 @@ public class ManagerMenuTableros : MonoBehaviour
     string tamaño;
     string minijuegos = "";
     string minijuegos18 = "";
+    string continuarPartida = "N";
 
     // Start is called before the first frame update
     void Start()
     {
-        string databasePath = Path.Combine(Application.persistentDataPath, "JuegOcaBBDD.db");
-        managerBBDD = new ClaseManagerBBDD(databasePath);
+
+        // Inicialización de sqlite-net
+        try
+        {
+            ClaseManagerBBDD.Instance.Conectar(Path.Combine(Application.persistentDataPath, "JuegOcaBBDD.db"));
+            Debug.Log("Base de datos SQLite conectada correctamente.");
+        }
+        catch (Exception e)
+        {
+            Debug.LogError("Error al conectar con la base de datos: " + e.Message);
+        }
 
         ReiniciarTablaConfiguracion();
+
+        
         
     }
 
@@ -45,9 +56,10 @@ public class ManagerMenuTableros : MonoBehaviour
     public void Jugar() {
 
         ToggleActivos();
-        ConfiguracionTablero config = new ConfiguracionTablero(tablero, tamaño,minijuegos,minijuegos18); 
-        managerBBDD.Insert<ConfiguracionTablero>(config);
+        ConfiguracionTablero config = new ConfiguracionTablero(tablero, tamaño,minijuegos,minijuegos18,continuarPartida);
+        ClaseManagerBBDD.Instance.Insert<ConfiguracionTablero>(config);
         popupConfiguracionTableros.SetActive(false);
+        //managerBBDD.CloseDatabase();
         SceneManager.LoadScene("GenerarTablero");
 
 
@@ -122,14 +134,16 @@ public class ManagerMenuTableros : MonoBehaviour
     void ReiniciarTablaConfiguracion() {
 
         try {
-            configuracionTableros = managerBBDD.SelectAll<ConfiguracionTablero>();
-            managerBBDD.DeletetAll<ConfiguracionTablero>();
+            configuracionTableros = ClaseManagerBBDD.Instance.SelectAll<ConfiguracionTablero>();
+            ClaseManagerBBDD.Instance.DeleteAll<ConfiguracionTablero>();
         } catch {
-            managerBBDD.CreateTable<ConfiguracionTablero>();
+            ClaseManagerBBDD.Instance.CreateTable<ConfiguracionTablero>();
         }
         
 
     }
+
+
 }
 public class ConfiguracionTablero
 {
@@ -140,15 +154,18 @@ public class ConfiguracionTablero
     public string minijuegos { get; set; }
     public string minijuegos18 { get; set; }
 
+    public string continuarPartida { get; set; }
+
     public ConfiguracionTablero()
     {
  
     }
-    public ConfiguracionTablero(string tablero, string tamaño, string minijuegos, string minijuegos18)
+    public ConfiguracionTablero(string tablero, string tamaño, string minijuegos, string minijuegos18, string continuarPartida)
     {
         this.tablero = tablero;
         this.tamaño = tamaño;
         this.minijuegos = minijuegos;
         this.minijuegos18 = minijuegos18;
+        this.continuarPartida = continuarPartida;
     }
 }

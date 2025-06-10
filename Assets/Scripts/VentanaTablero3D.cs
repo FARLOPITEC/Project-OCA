@@ -6,6 +6,7 @@ using System.IO;
 using System.Linq;
 using TMPro;
 using Unity.Mathematics;
+using Unity.VisualScripting.FullSerializer;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
@@ -116,6 +117,7 @@ public class VentanaTablero3D : MonoBehaviour
 
     public GameObject Boton2D;
     public GameObject Boton3D;
+    public Camera camaraBoton3D;
     public GameObject noCamera;
 
 
@@ -133,15 +135,25 @@ public class VentanaTablero3D : MonoBehaviour
 
 
     ////BBDD------------------------------------------------------------------
-    ClaseManagerBBDD managerBBDD;
+    
     List<Jugador> jugBBDD;
+
+    bool hayPartida=false;
 
     void Awake()
     {
-        //BBDD
-        string databasePath = Path.Combine(Application.persistentDataPath, "JuegOcaBBDD.db");
-        managerBBDD = new ClaseManagerBBDD(databasePath);
-        
+
+
+        // Inicialización de sqlite-net
+        try
+        {
+            ClaseManagerBBDD.Instance.Conectar(Path.Combine(Application.persistentDataPath, "JuegOcaBBDD.db"));
+            Debug.Log("Base de datos SQLite conectada correctamente.");
+        }
+        catch (Exception e)
+        {
+            Debug.LogError("Error al conectar con la base de datos: " + e.Message);
+        }
 
         CrearMinijuegos();
         CargarConfigMinijugegos();
@@ -706,12 +718,12 @@ public class VentanaTablero3D : MonoBehaviour
         {
             if (jugador.Value.Posicion == siguientePosicion)
             {
-                fichas[jugador.Value.Ficha].SetActive(false); // Desactiva si hay ficha en la casilla destino
+                if (!jugador.Key.Equals(turnos[jugadorActual])) { fichas[jugador.Value.Ficha].SetActive(false); } // Desactiva si hay ficha en la casilla destino
             }
 
             if (jugador.Value.Posicion == posicionActual)
             {
-                fichas[jugador.Value.Ficha].SetActive(true); // Activa la ficha del jugador que ha llegado
+                if (!jugador.Key.Equals(turnos[jugadorActual])) { fichas[jugador.Value.Ficha].SetActive(true); }  // Activa la ficha del jugador que ha llegado
             }
         }
     }
@@ -754,6 +766,12 @@ public class VentanaTablero3D : MonoBehaviour
                     camaraTransform.gameObject.SetActive(false);
                     if (cont == 1) camaraTransform.gameObject.SetActive(true);
 
+                    if (hayPartida) {
+                        
+                        Vector3 posicionInicial = casillas.transform.TransformPoint(posicionesTablero[ju.Value.Posicion]);
+                        nuevaFicha.transform.position = posicionInicial;
+
+                    }
                     nuevaFicha.transform.SetParent(casillas.transform, false);
 
                 }
@@ -886,7 +904,10 @@ public class VentanaTablero3D : MonoBehaviour
         if (tiempoQuieto >= tiempoNecesario)
         {
             DetectarCaraSuperiorDef();
+         
             if (Boton3D.activeSelf) popupTablero2D.SetActive(true);
+        
+            
             PopupDado.SetActive(false);
             
             TurnoCamara(fichas[jugadores[turnos[jugadorActual]].Ficha]);
@@ -988,7 +1009,7 @@ public class VentanaTablero3D : MonoBehaviour
         
         MostrarCarta(RamdomMinijuego());
 
-        block =false;
+        
     }
 
     IEnumerator RotarCamaraSuavemente(float anguloRot)
@@ -1061,9 +1082,11 @@ public class VentanaTablero3D : MonoBehaviour
 
                StartCoroutine(ObtenerPosicionCasilla(casillas2D[CalcularPosicionEnGrid(0)], botonCasillas2D[CalcularPosicionEnGrid(0)], (posicion,posicion2) =>
                {
+          
                    fichaPrefab2D.GetComponent<RectTransform>().anchoredPosition = posicion;
                    fichaBTNCasilla2D.GetComponent<RectTransform>().anchoredPosition = posicion2;
-
+                   
+ 
                    fichaPrefab2D.SetActive(true);
                    fichaBTNCasilla2D.SetActive(true);
                }));
@@ -1699,18 +1722,8 @@ public class VentanaTablero3D : MonoBehaviour
     void CargarJugadores() {
 
         int cont = 1;
-        jugBBDD = managerBBDD.SelectAll<Jugador>();
-        if (jugBBDD == null)
-        {
-            Jugador3D jugador1 = new Jugador3D("Carmelo","rojo", "C:/Users/carma/Downloads/Corazon2.png", "FichaCorazon", 0);
-            Jugador3D jugador2 = new Jugador3D("Fran", "verde","C:/Users/carma/Downloads/Corazon2.png", "FichaCylinder", 0);
-            Jugador3D jugador3 = new Jugador3D("Seryi","fuxia", "C:/Users/carma/Downloads/Corazon2.png", "FichaCylinder", 0);
-
-            jugadores.Add(jugador1.Nombre, jugador1);
-            jugadores.Add(jugador2.Nombre, jugador2);
-            jugadores.Add(jugador3.Nombre, jugador3);
-        }
-        else {
+        jugBBDD = ClaseManagerBBDD.Instance.SelectAll<Jugador>();
+        if (jugBBDD != null){
             foreach (Jugador ju in jugBBDD)
             {
                 Jugador3D jugador3D = new Jugador3D(ju.Nombre,ju.ColorIcono, ju.RutaImagen, ju.Ficha, 0);
@@ -1722,17 +1735,29 @@ public class VentanaTablero3D : MonoBehaviour
 
             }
         }
-        
+        ClaseManagerBBDD.Instance.SelectAll<Jugador>();
     }
 
     void CargarColores() {
 
-        coloresJu = managerBBDD.SelectAll<ColorJugadores>();
+        coloresJu = ClaseManagerBBDD.Instance.SelectAll<ColorJugadores>();
     }
 
 
     IEnumerator MovimientoHada()
     {
+        Camera camaraComponente = camaraPopup.GetComponent<Camera>();
+        if (camaraComponente != null)
+        {
+            Debug.Log($"Cámara activa: {camaraComponente.enabled}");
+            Debug.Log($"RenderTexture asignada: {camaraComponente.targetTexture}");
+        }
+        else
+        {
+            Debug.LogError("Error: El GameObject no tiene un componente Camera.");
+        }
+
+
         // Posición y rotación relativa de la cámara de referencia
         Vector3 destinoFinal = camaraReferencia.transform.localPosition;
         Quaternion rotacionFinal = camaraReferencia.transform.localRotation;
@@ -1865,6 +1890,7 @@ public class VentanaTablero3D : MonoBehaviour
 
     public void OtraPartida() {
 
+        
         SceneManager.LoadScene(SceneManager.GetActiveScene().name);
 
     }
@@ -1873,6 +1899,7 @@ public class VentanaTablero3D : MonoBehaviour
  
     public void Salir()
     {
+        
         SceneManager.LoadScene("MenuTableros");
 
     }
@@ -2000,7 +2027,7 @@ public class VentanaTablero3D : MonoBehaviour
     public void Continuar() { 
     
         popupMinijuegos.SetActive(false);
-
+        block = false;
         MostrarPopupTurno();
     }
     //Cargar MiniJuegos
@@ -2025,7 +2052,7 @@ public class VentanaTablero3D : MonoBehaviour
 
     void CargarConfigMinijugegos() {
 
-        configMinijuegos = managerBBDD.SelectAll<ConfiguracionTablero>();
+        configMinijuegos = ClaseManagerBBDD.Instance.SelectAll<ConfiguracionTablero>();
 
         for (int i = 0; i < configMinijuegos.Count; i++) {
             Debug.Log("tablero: " + configMinijuegos[i].tablero.ToUpper()+ " minijuegos: " + configMinijuegos[i].minijuegos + " minijuegos18: " + configMinijuegos[i].minijuegos18 + " tamaño: " + configMinijuegos[i].tamaño);
@@ -2040,6 +2067,10 @@ public class VentanaTablero3D : MonoBehaviour
             else if (configMinijuegos[0].tablero.ToUpper().Equals("HOT")) numeroTablero = 2;
             else if (configMinijuegos[0].tablero.ToUpper().Equals("PAREJA")) numeroTablero = 3;
             else if (configMinijuegos[0].tablero.ToUpper().Equals("GIGANTE")) numeroTablero = 4;
+
+        if (configMinijuegos[0].continuarPartida.Equals("S")) {
+            hayPartida = true;
+        }
 
         string[] minijuegos = configMinijuegos[0].minijuegos.Split(':', StringSplitOptions.RemoveEmptyEntries);
         string[] minijuegos18 = configMinijuegos[0].minijuegos18.Split(':', StringSplitOptions.RemoveEmptyEntries);
@@ -2381,6 +2412,53 @@ public class VentanaTablero3D : MonoBehaviour
     }
 */
 
+    //Cerrar Aplicacion
+
+    void OnApplicationQuit()
+    {
+        GuardarDatosPartida(); // Método que guarda la partida en SQLite antes de cerrar
+        GuardarConfiguracion();
+    }
+
+    void GuardarDatosPartida() {
+
+        List<Jugador3D> jugadores3D = new List<Jugador3D>(); 
+        try
+        {
+            jugadores3D = ClaseManagerBBDD.Instance.SelectAll<Jugador3D>();
+            ClaseManagerBBDD.Instance.DeleteAll<Jugador3D>();
+        }
+        catch
+        {
+            ClaseManagerBBDD.Instance.CreateTable<Jugador3D>();
+        }
+
+        if (jugBBDD != null)
+        {
+            foreach (KeyValuePair<string,Jugador3D> ju in jugadores)
+            {
+                ClaseManagerBBDD.Instance.Insert<Jugador3D>(ju.Value);
+            }
+
+        }
+        
+    }
+
+    void GuardarConfiguracion() {
+
+        ClaseManagerBBDD.Instance.DeleteAll<ConfiguracionTablero>();
+        ClaseManagerBBDD.Instance.Insert<ConfiguracionTablero>(configMinijuegos[0]);
+
+    }
+
+    void OnDestroy()
+    {
+        if (ClaseManagerBBDD.Instance != null)
+        {
+            ClaseManagerBBDD.Instance.CloseDatabase();
+            
+        }
+    }
 }
 
 

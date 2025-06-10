@@ -1,7 +1,9 @@
 using SQLite;
 using System.Collections;
 using System.Collections.Generic;
+using System.IO;
 using UnityEngine;
+using UnityEngine.Networking;
 using UnityEngine.UIElements;
 
 public class Ficha
@@ -44,43 +46,108 @@ public class Jugador3D
     }
 }
 
+
 public class ClaseManagerBBDD
 {
-
     private SQLiteConnection connection;
+    private static ClaseManagerBBDD instance;
 
-    public ClaseManagerBBDD(string databasePath)
+    public void Conectar(string databasePath)
     {
-        connection = new SQLiteConnection(databasePath); // SQLite-net usa este constructor directamente
+        if (connection == null)
+        {
+            connection = new SQLiteConnection(databasePath);
+            Debug.Log("Base de datos conectada en: " + databasePath);
+        }
+    }
+
+    public static ClaseManagerBBDD Instance
+    {
+        get
+        {
+            if (instance == null)
+            {
+                string dbPath = Path.Combine(Application.persistentDataPath, "JuegOcaBBDD.db");
+
+                // Verifica si la base de datos existe; si no, cópiala antes de inicializar el Singleton
+                if (!File.Exists(dbPath))
+                {
+                    Debug.Log("Base de datos no encontrada, copiando desde StreamingAssets...");
+                    string sourcePath = Path.Combine(Application.streamingAssetsPath, "JuegOcaBBDD.db");
+
+                    if (Application.platform == RuntimePlatform.Android)
+                    {
+                        UnityWebRequest www = UnityWebRequest.Get(sourcePath);
+                        www.SendWebRequest();
+
+                        while (!www.isDone) { } // Espera a que termine la descarga
+
+                        if (www.result == UnityWebRequest.Result.Success)
+                        {
+                            File.WriteAllBytes(dbPath, www.downloadHandler.data);
+                            Debug.Log("Base de datos copiada exitosamente.");
+                        }
+                        else
+                        {
+                            Debug.LogError("Error al copiar la base de datos: " + www.error);
+                        }
+                    }
+                    else
+                    {
+                        File.WriteAllBytes(dbPath, File.ReadAllBytes(sourcePath));
+                        Debug.Log("Base de datos copiada exitosamente.");
+                    }
+                }
+
+                instance = new ClaseManagerBBDD(dbPath);
+            }
+            return instance;
+        }
+
+    }
+
+
+
+    private ClaseManagerBBDD(string databasePath)
+    {
+        connection = new SQLiteConnection(databasePath);
     }
 
     public void CreateTable<T>()
     {
-        connection.CreateTable<T>(); // Método propio de SQLite-net para crear tablas
+        connection.CreateTable<T>();
     }
+
+    public void DeleteTable<T>()
+    {
+        connection.DropTable<T>();
+    }
+
     public void Insert<T>(T objeto) where T : new()
     {
-        connection.Insert(objeto); // Método genérico para insertar cualquier tipo de objeto en la base de datos
+        connection.Insert(objeto);
     }
 
     public List<T> SelectAll<T>() where T : new()
     {
-        return connection.Table<T>().ToList(); // Devuelve todos los registros de la tabla T
+        return connection.Table<T>().ToList();
     }
 
-    public void DeletetAll<T>() where T : new()
+    public void DeleteAll<T>() where T : new()
     {
-        connection.DeleteAll<T>(); // Borra todos los registros de la tabla sin eliminarla
+        connection.DeleteAll<T>();
     }
-
-
-
 
     public void CloseDatabase()
     {
         connection.Close();
     }
 }
+
+
+//Singleton BBDD
+
+
 
 //Tablero 2D
 
@@ -114,5 +181,8 @@ public class MinijuegoTablero
     }
 }
 
-
+public static class DatosEscena
+{
+    public static string EscenaAnterior { get; set; }
+}
 

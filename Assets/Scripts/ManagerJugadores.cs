@@ -5,9 +5,13 @@ using System.IO;
 using TMPro;
 //using Unity.VisualScripting;
 using UnityEngine;
+using UnityEngine.Android;
+using UnityEngine.Networking;
 using UnityEngine.Rendering;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
+
+
 
 
 public class ManagerJugadores : MonoBehaviour
@@ -27,6 +31,8 @@ public class ManagerJugadores : MonoBehaviour
     public GameObject popupAdvertenvia;
     public TMP_Text tituloPopupAdvertencia;
     public TMP_Text problema;
+    //Popup continuar partida
+    public GameObject popupContinuarPartida;
 
     //Generales
     Dictionary<string, Jugador> jugadores = new Dictionary<string, Jugador>();
@@ -37,37 +43,92 @@ public class ManagerJugadores : MonoBehaviour
     int numJugadores = 1;
 
     //BBDD
-    ClaseManagerBBDD managerBBDD;
-    bool existeBaseDeDatos;
 
+    bool existeBaseDeDatos;
+    void Awake()
+    {
+        Application.targetFrameRate = 60; // Reducir FPS para mejorar rendimiento y batería
+        QualitySettings.vSyncCount = 0; // Desactivar VSync en móvil
+    }
     // Start is called before the first frame update
     void Start()
     {
-        /*SQLitePCL.Batteries.Init();
-        SQLitePCL.raw.SetProvider(new SQLitePCL.SQLite3Provider_e_sqlite3());*/
-
-
-        string databasePath = Path.Combine(Application.persistentDataPath, "JuegOcaBBDD.db");
-        
-        
-        existeBaseDeDatos = File.Exists(databasePath);
-        managerBBDD = new ClaseManagerBBDD(databasePath);
-        if (!existeBaseDeDatos)
+        if (!Permission.HasUserAuthorizedPermission("android.permission.READ_MEDIA_IMAGES"))
         {
-            managerBBDD.CreateTable<ColorJugadores>();
-            managerBBDD.CreateTable<Jugador>();
+            Debug.LogError("Permiso de lectura revocado, solicitando de nuevo...");
+            Permission.RequestUserPermission("android.permission.READ_MEDIA_IMAGES");
+        }
+        else
+        {
+            Debug.Log("Permiso activo, debería poder acceder sin problemas.");
+        }
+        Debug.Log("Cargando SQLite...");
+
+
+        // Inicialización de sqlite-net
+        try
+        {
+            ClaseManagerBBDD.Instance.Conectar(Path.Combine(Application.persistentDataPath, "JuegOcaBBDD.db"));
+            Debug.Log("Base de datos SQLite conectada correctamente.");
+        }
+        catch (Exception e)
+        {
+            Debug.LogError("Error al conectar con la base de datos: " + e.Message);
+        }
+
+        
+        List<Jugador> Jug = null;
+        List<ConfiguracionTablero> config = null;
+        try
+        {
+            Jug= ClaseManagerBBDD.Instance.SelectAll<Jugador>();
+            
+            
+        }
+        catch
+        {
+            ClaseManagerBBDD.Instance.CreateTable<Jugador>();
 
         }
-        else {
-            managerBBDD.DeletetAll<Jugador>();
+
+        try
+        {
+            config = ClaseManagerBBDD.Instance.SelectAll<ConfiguracionTablero>();
+
+
+        }
+        catch
+        {
+
+        }
+
+        if (config != null && config[0].continuarPartida.Equals("S"))
+        {
+
+            popupContinuarPartida.gameObject.SetActive(true);
+        }
+        else if(Jug!=null){
+            ClaseManagerBBDD.Instance.DeleteAll<Jugador>();
         }
         
 
-        jugadores = new Dictionary<string, Jugador>();
-        GenerarColores();
-        AñadirBotonesColor();
+
+        try
+        {
+            StartCoroutine(GenerarColores());
+        }
+        catch (Exception e)
+        {
+            Debug.LogError("Error crítico antes del cierre: " + e.Message);
+        }
 
     }
+
+
+
+
+
+
 
     // Update is called once per frame
     void Update()
@@ -90,14 +151,32 @@ public class ManagerJugadores : MonoBehaviour
 
     public void AccionEmpezar()
     {
+        if (jugadores.Count > 1)
+        {
+            StartCoroutine(CambiarEscena());
+        }
+        else
+        {
+            StartCoroutine(ProducirErrorJugadores());
+        }
+    }
 
-        AñadirJugadoresBBDD();
-        managerBBDD.CloseDatabase();
-        SceneManager.LoadScene("MenuModosDeJuego"); // Cambia por el nombre real de la escena
+    IEnumerator CambiarEscena()
+    {
 
+        if (jugadores.Count > 1)
+        {
+            StartCoroutine(GuardarJugadoresYCambiarEscena());
+           
+            //managerBBDD.CloseDatabase();
+            yield return null;
+            SceneManager.LoadScene("MenuModosDeJuego"); // Cambia por el nombre real de la escena
+        }
+        else {
 
+            StartCoroutine(ProducirErrorJugadores());
 
-
+        }
 
     }
     //Popup Jugador
@@ -153,9 +232,14 @@ public class ManagerJugadores : MonoBehaviour
 
     public void BotonElegirImagen()
     {
-
-       ruta = ElegirImagen();
-
+        ElegirImagen((rutaSeleccionada) =>
+        {
+            if (!string.IsNullOrEmpty(rutaSeleccionada))
+            {
+                ruta = rutaSeleccionada;
+                CambiarImagenJugador(imagenElegida.gameObject, ruta);
+            }
+        });
     }
 
     void ReiniciarPopup() {
@@ -201,7 +285,7 @@ public class ManagerJugadores : MonoBehaviour
     //Popup Jugador----------------------------------------------------------------------------------------------------------------------------------
     //Generar Botones Colores Popup
 
-    void AñadirColores() {
+    IEnumerator AñadirColores() {
         strColoresHex.Add("rojo", "#FF0008");
         strColoresHex.Add("verde", "#3EFF00");
         strColoresHex.Add("amarillo", "#F4FF00");
@@ -212,6 +296,8 @@ public class ManagerJugadores : MonoBehaviour
         strColoresHex.Add("naranja", "#FF7000");
         strColoresHex.Add("rosa", "#D76097");
         strColoresHex.Add("amarilloC", "#C1D760");
+        Debug.Log("AñadirColores() terminó correctamente.");
+        yield return null;
     }
     string ColorElegidoHex(Color color)
     {
@@ -229,27 +315,81 @@ public class ManagerJugadores : MonoBehaviour
 
         return strColor;
     }
-    void GenerarColor(string hex, string nombreColor) {
+    IEnumerator GenerarColor2(string hex, string nombreColor) {
 
         ColorUtility.TryParseHtmlString(hex, out Color color);
         colores.Add(hex, color);
+
+        yield return null;
+
     }
 
-    void GenerarColores() {
-        AñadirColores();
-        foreach (KeyValuePair<string, string> coH in strColoresHex) {
+    IEnumerator GenerarColor(string hex, string nombreColor)
+    {
+        Color color;
+        if (ColorUtility.TryParseHtmlString(hex, out color))
+        {
+            colores.Add(hex, color);
+            Debug.Log("Color generado: " + nombreColor + " -> " + color);
+        }
+        else
+        {
+            Debug.LogError("Error al convertir color: " + hex);
+        }
+
+        yield return null; // Espera un frame antes de seguir
+    }
+
+    IEnumerator GenerarColores()
+    {
+        yield return StartCoroutine(AñadirColores());
+
+        
+
+        Debug.Log("Cantidad de colores en strColoresHex antes del foreach: " + strColoresHex.Count);
+
+        try
+        {
+            ClaseManagerBBDD.Instance.DeleteAll<ColorJugadores>();
+
+        }
+        catch
+        {
+            ClaseManagerBBDD.Instance.CreateTable<ColorJugadores>();
+        }
+        foreach (KeyValuePair<string, string> coH in strColoresHex)
+        {
+            if (colores == null)
+            {
+                colores = new Dictionary<string, Color>();
+                Debug.LogWarning("¡colores estaba NULL, ahora está inicializado!");
+            }
+
+            yield return StartCoroutine(GenerarColor(coH.Value, coH.Key));
+
             
-            GenerarColor(coH.Value, coH.Key);
             if (!existeBaseDeDatos)
             {
                 colorJuBBDD = new ColorJugadores(coH.Key, coH.Value);
-                managerBBDD.Insert<ColorJugadores>(colorJuBBDD);
 
+                if (colorJuBBDD != null)
+                {
+                    ClaseManagerBBDD.Instance.Insert<ColorJugadores>(colorJuBBDD);
+                }
+                else
+                {
+                    Debug.LogError("colorJuBBDD es NULL antes de la inserción en la base de datos!");
+                }
             }
-
-        
         }
+
+         
+
+        AñadirBotonesColor();
+        System.GC.Collect();
+        Resources.UnloadUnusedAssets();
     }
+
     void GeneraColores2() {
 
 
@@ -331,7 +471,7 @@ public class ManagerJugadores : MonoBehaviour
     }
     //Elegir Imagen Popup
 
-    string ElegirImagen()
+    void ElegirImagen(Action<string> callback)
     {
         string ruta = "";
         //noImagen.gameObject.SetActive(false);
@@ -342,17 +482,42 @@ public class ManagerJugadores : MonoBehaviour
             {
                 ruta = path;
                 CambiarImagenJugador(imagenElegida.gameObject, ruta);
+                callback?.Invoke(path);
             }
             else
             {
                 Debug.Log("No se seleccionó ningún archivo.");
+                callback?.Invoke(null);
             }
 
 
         }, new string[] { "image/*" }// Prueba con un solo formato
 );
-        return ruta;
+        
     }
+
+    void ElegirImagen2(Action<string> callback)
+    {
+        string ruta = "";
+
+        NativeFilePicker.PickFile((path) =>
+        {
+            if (!string.IsNullOrEmpty(path))
+            {
+                ruta = path;
+                CambiarImagenJugador(imagenElegida.gameObject, ruta);
+                callback?.Invoke(path);
+            }
+            else
+            {
+                Debug.Log("No se seleccionó ninguna imagen.");
+                callback?.Invoke(null);
+            }
+
+        }, new string[] { "image/jpeg", "image/png" }); // Usa formatos específicos
+    }
+
+
     void CambiarImagenJugador(GameObject prefab, string path)
     {
         if (path != null || path != "")
@@ -412,7 +577,7 @@ public class ManagerJugadores : MonoBehaviour
 
     //Popup Advertencia----------------------------------------------------------------------------------------------------------------------------------
     IEnumerator ProducirError(Jugador ju,Boolean encontrado) {
-        popupAdvertenvia.gameObject.SetActive(true);
+        
         ColorUtility.TryParseHtmlString("#FFFFFF", out Color blanco);
         ColorUtility.TryParseHtmlString(ju.ColorIcono, out Color colorJugador);
         Debug.Log("color: "+ ju.ColorIcono);
@@ -445,22 +610,61 @@ public class ManagerJugadores : MonoBehaviour
 
 
         }
+        popupAdvertenvia.gameObject.SetActive(true);
         yield return new WaitForSeconds(2); 
 
         popupAdvertenvia.gameObject.SetActive(false); 
     }
+    IEnumerator ProducirErrorJugadores()
+    {
 
+        tituloPopupAdvertencia.text = "Error Numero de Jugadores";
+        problema.text = "Debes añadir como minimo 2 jugadores";
+
+
+        popupAdvertenvia.gameObject.SetActive(true);
+        yield return new WaitForSeconds(2);
+
+        popupAdvertenvia.gameObject.SetActive(false);
+    }
     //BBDD----------------------------------------------------------------------------
 
+    IEnumerator GuardarJugadoresYCambiarEscena()
+    {
+        AñadirJugadoresBBDD(); // Esperar a que termine
 
+        //managerBBDD.CloseDatabase(); // Cerrar la base de datos después de la última inserción
 
-    void AñadirJugadoresBBDD() {
-        foreach (KeyValuePair<string, Jugador> ju in jugadores) {
+        yield return null; // Esperar un frame antes de cambiar de escena
 
+        SceneManager.LoadScene("MenuModosDeJuego");
+    }
 
-            managerBBDD.Insert<Jugador>(ju.Value);
+    void AñadirJugadoresBBDD()
+    {
+        foreach (KeyValuePair<string, Jugador> ju in jugadores)
+        {
+            ClaseManagerBBDD.Instance.Insert<Jugador>(ju.Value);
+            // Espera un frame antes de la siguiente inserción
         }
     }
+
+
+ 
+
+
+    //Continuar partida
+    public void ConinuarPartidaAnterior() {
+        DatosEscena.EscenaAnterior = SceneManager.GetActiveScene().name;
+        //managerBBDD.CloseDatabase();
+        SceneManager.LoadScene("GenerarTablero");
+    }
+
+    public void IniciarNueva() {
+        ClaseManagerBBDD.Instance.DeleteAll<Jugador>();
+        popupContinuarPartida.gameObject.SetActive(false); 
+    }
+
 
 
 }
