@@ -18,6 +18,7 @@ public class ManagerMenuTableros : MonoBehaviour
     public Toggle[] opcionesMinijuegos18 = new Toggle[0];
 
     public GameObject popupConfiguracionTableros;
+    public GameObject fondoDifuminado;
 
     string tablero;
     string tamaño;
@@ -59,6 +60,7 @@ public class ManagerMenuTableros : MonoBehaviour
         ConfiguracionTablero config = new ConfiguracionTablero(tablero, tamaño,minijuegos,minijuegos18,continuarPartida);
         ClaseManagerBBDD.Instance.Insert<ConfiguracionTablero>(config);
         popupConfiguracionTableros.SetActive(false);
+        fondoDifuminado.SetActive(false);
         //managerBBDD.CloseDatabase();
         SceneManager.LoadScene("GenerarTablero");
 
@@ -68,6 +70,7 @@ public class ManagerMenuTableros : MonoBehaviour
     public void SeleccionTablero()
     {
         popupConfiguracionTableros.SetActive(true);
+        fondoDifuminado.SetActive(true);
         GameObject clickedButton = EventSystem.current.currentSelectedGameObject;
         if (clickedButton != null)
         {
@@ -80,6 +83,7 @@ public class ManagerMenuTableros : MonoBehaviour
     public void Volver()
     {
         popupConfiguracionTableros.SetActive(false);
+        fondoDifuminado.SetActive(false);
 
     }
 
