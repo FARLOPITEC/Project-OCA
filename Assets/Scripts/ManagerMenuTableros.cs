@@ -144,7 +144,7 @@ public class ManagerMenuTableros : MonoBehaviour
 
         
         try {
-            configuracionTableros = ClaseManagerBBDD.Instance.SelectAll<ConfiguracionTablero>();
+            //configuracionTableros = ClaseManagerBBDD.Instance.SelectAll<ConfiguracionTablero>();
             ClaseManagerBBDD.Instance.DeleteAll<ConfiguracionTablero>();
         } catch {
             

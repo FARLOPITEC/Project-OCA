@@ -1,4 +1,5 @@
 using SQLite;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
@@ -46,18 +47,52 @@ public class Jugador3D
     }
 }
 
-
 public class ClaseManagerBBDD
 {
     private SQLiteConnection connection;
+    private string databasePath;
     private static ClaseManagerBBDD instance;
 
     public void Conectar(string databasePath)
     {
+        // Guarda la ruta para poder reconectar más tarde si es necesario.
+        this.databasePath = databasePath;
+
+        // Si connection es nula o está cerrada (en este ejemplo suponemos que si se produce cualquier error al crear un comando, la conexión no está disponible)
         if (connection == null)
         {
-            connection = new SQLiteConnection(databasePath);
-            Debug.Log("Base de datos conectada en: " + databasePath);
+            try
+            {
+                connection = new SQLiteConnection(databasePath);
+                Debug.Log("Base de datos conectada en: " + databasePath);
+            }
+            catch (Exception e)
+            {
+                Debug.LogError("Error al conectar con la base de datos: " + e.Message);
+            }
+        }
+        else
+        {
+            // Opcional: intenta verificar que la conexión sigue siendo válida.
+            try
+            {
+                // Tratamos de crear un comando simple para probar la conexión. Si falla, se reabre.
+                var cmd = connection.CreateCommand("SELECT 1");
+                int resultado = cmd.ExecuteScalar<int>();
+            }
+            catch (Exception)
+            {
+                // Se detecta que la conexión no es válida, se reinicializa.
+                try
+                {
+                    connection = new SQLiteConnection(databasePath);
+                    Debug.Log("Base de datos reconectada en: " + databasePath);
+                }
+                catch (Exception e)
+                {
+                    Debug.LogError("Error al reconectar con la base de datos: " + e.Message);
+                }
+            }
         }
     }
 
@@ -101,8 +136,7 @@ public class ClaseManagerBBDD
                     {
                         Debug.LogWarning("No hay archivo en StreamingAssets. Creando una base de datos nueva...");
                         SQLiteConnection conn = new SQLiteConnection(dbPath);
-
-
+                        // Aquí podrías crear las tablas o lo que necesites.
                     }
                 }
 
@@ -110,13 +144,11 @@ public class ClaseManagerBBDD
             }
             return instance;
         }
-
     }
-
-
 
     private ClaseManagerBBDD(string databasePath)
     {
+        this.databasePath = databasePath;
         connection = new SQLiteConnection(databasePath);
     }
 
@@ -148,9 +180,9 @@ public class ClaseManagerBBDD
     public void CloseDatabase()
     {
         connection.Close();
+        connection = null;
     }
 }
-
 
 //Singleton BBDD
 

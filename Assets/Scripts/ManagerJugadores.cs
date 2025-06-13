@@ -110,6 +110,7 @@ public class ManagerJugadores : MonoBehaviour
         }
         else{
             ClaseManagerBBDD.Instance.DeleteAll<Jugador>();
+            ClaseManagerBBDD.Instance.DeleteAll<ConfiguracionTablero>();
         }
         
 
