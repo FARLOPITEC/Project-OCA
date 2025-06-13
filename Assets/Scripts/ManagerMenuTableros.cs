@@ -57,7 +57,7 @@ public class ManagerMenuTableros : MonoBehaviour
     public void Jugar() {
 
         ToggleActivos();
-        ConfiguracionTablero config = new ConfiguracionTablero(tablero, tamaño,minijuegos,minijuegos18,continuarPartida);
+        ConfiguracionTablero config = new ConfiguracionTablero(tablero, tamaño,minijuegos,minijuegos18,continuarPartida,1);
         ClaseManagerBBDD.Instance.Insert<ConfiguracionTablero>(config);
         popupConfiguracionTableros.SetActive(false);
         fondoDifuminado.SetActive(false);
@@ -141,10 +141,12 @@ public class ManagerMenuTableros : MonoBehaviour
 
     void ReiniciarTablaConfiguracion() {
 
+        
         try {
             configuracionTableros = ClaseManagerBBDD.Instance.SelectAll<ConfiguracionTablero>();
             ClaseManagerBBDD.Instance.DeleteAll<ConfiguracionTablero>();
         } catch {
+            
             ClaseManagerBBDD.Instance.CreateTable<ConfiguracionTablero>();
         }
         
@@ -163,17 +165,19 @@ public class ConfiguracionTablero
     public string minijuegos18 { get; set; }
 
     public string continuarPartida { get; set; }
+    public int jugadorActual { get; set; }
 
     public ConfiguracionTablero()
     {
  
     }
-    public ConfiguracionTablero(string tablero, string tamaño, string minijuegos, string minijuegos18, string continuarPartida)
+    public ConfiguracionTablero(string tablero, string tamaño, string minijuegos, string minijuegos18, string continuarPartida, int jugadorActual)
     {
         this.tablero = tablero;
         this.tamaño = tamaño;
         this.minijuegos = minijuegos;
         this.minijuegos18 = minijuegos18;
         this.continuarPartida = continuarPartida;
+        this.jugadorActual = jugadorActual;
     }
 }

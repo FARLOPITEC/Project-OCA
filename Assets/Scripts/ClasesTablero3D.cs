@@ -92,10 +92,17 @@ public class ClaseManagerBBDD
                             Debug.LogError("Error al copiar la base de datos: " + www.error);
                         }
                     }
-                    else
+                    else if (File.Exists(sourcePath))
                     {
                         File.WriteAllBytes(dbPath, File.ReadAllBytes(sourcePath));
                         Debug.Log("Base de datos copiada exitosamente.");
+                    }
+                    else
+                    {
+                        Debug.LogWarning("No hay archivo en StreamingAssets. Creando una base de datos nueva...");
+                        SQLiteConnection conn = new SQLiteConnection(dbPath);
+
+
                     }
                 }
 

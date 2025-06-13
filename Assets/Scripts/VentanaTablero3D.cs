@@ -14,6 +14,7 @@ using static SeleccionMinijuegos;
 using static TMPro.SpriteAssetUtilities.TexturePacker_JsonArray;
 using static UnityEngine.EventSystems.EventTrigger;
 using static UnityEngine.Rendering.DebugUI;
+using static UnityEngine.UI.Image;
 using Button = UnityEngine.UI.Button;
 using Random = UnityEngine.Random;
 
@@ -132,14 +133,15 @@ public class VentanaTablero3D : MonoBehaviour
     public RawImage lienzoDibujo;
     public TMP_Text tiempoContador;
 
-
+    GameObject cartaActiva;
 
 
     ////BBDD------------------------------------------------------------------
-    
+
     List<Jugador> jugBBDD;
 
     bool hayPartida=false;
+    int contAutoGuardado = 0;
 
     void Awake()
     {
@@ -188,7 +190,7 @@ public class VentanaTablero3D : MonoBehaviour
         CargarColores();
 
 
-
+        Debug.Log("coloresJu: " + coloresJu.Count);
         PersonalizarFicha();
         MarcoJugador();
 
@@ -224,7 +226,7 @@ public class VentanaTablero3D : MonoBehaviour
 
     void GenerarTablero3D(int filas, int columnas)
     {
-
+        
         Debug.Log("filas: "+ filas+ " columnas: "+ columnas);
         float tamano = 5.1f; // Tamaño de cada cubo
         int x = 0, z = 0; // Posición inicial
@@ -242,6 +244,10 @@ public class VentanaTablero3D : MonoBehaviour
             porcentaje = new float[] { 0.33f, 0.59f, 0.79f, 0.92f };
             bordTableroGrande.SetActive(true);
             contenedorCorazones.transform.position = new Vector3(5025.5f, 20.4f, 15.3f);
+
+            camaraBoton3D.transform.localPosition = new Vector3(25.5f, 24.1f, -23.8f);
+
+
         }
         else if (filas * columnas < 9 * 9)
         {
@@ -249,6 +255,7 @@ public class VentanaTablero3D : MonoBehaviour
             porcentaje = new float[] { 0.47f, 0.8f, 0.99f, 0.0f };
             bordTableroPequeño.SetActive(true);
             contenedorCorazones.transform.position = new Vector3(5015.14602f, 20.70971f, 4.148824f);
+            camaraBoton3D.transform.localPosition = new Vector3(15.3f, 24.1f, -23.8f);
         }
         else
         {
@@ -256,6 +263,7 @@ public class VentanaTablero3D : MonoBehaviour
             porcentaje = new float[] { 0.39f, 0.69f, 0.88f, 0.0f };
             bordTableroMediano.SetActive(true);
             contenedorCorazones.transform.position = new Vector3(5020.4f, 20.4f, 10.2f);
+            camaraBoton3D.transform.localPosition = new Vector3(20.4f, 24.1f, -23.8f);
         }
         for (int i = 0; i < filas * columnas; i++)
         {
@@ -455,6 +463,8 @@ public class VentanaTablero3D : MonoBehaviour
     //Movimiento fichas -----------------------------------------------------------------------------------------
 
     IEnumerator GenerarFicha(KeyValuePair<string, Jugador3D> ju, System.Action<GameObject> callback) {
+
+        Debug.Log("Nombre: "+ ju.Value.Nombre+ " Ficha: " + ju.Value.Ficha);
         GameObject fichaPrefab = Resources.Load<GameObject>("Fichas/" + ju.Value.Ficha);
 
         GameObject nuevaFicha = Instantiate(fichaPrefab, new Vector3(0, 5.1f, 0), fichaPrefab.transform.rotation);
@@ -766,14 +776,15 @@ public class VentanaTablero3D : MonoBehaviour
 
                     camaraTransform.gameObject.SetActive(false);
                     if (cont == 1) camaraTransform.gameObject.SetActive(true);
-
+                    nuevaFicha.transform.SetParent(casillas.transform, false);
                     if (hayPartida) {
                         
-                        Vector3 posicionInicial = casillas.transform.TransformPoint(posicionesTablero[ju.Value.Posicion]);
-                        nuevaFicha.transform.position = posicionInicial;
-
+                        Vector3 posicionInicial = posicionesTablero[ju.Value.Posicion];
+                        //Debug.Log("posicionInicial: "+ ju.Value.Posicion + " "+ posicionInicial);
+                        nuevaFicha.transform.localPosition = posicionInicial;
+                        //camaraBoton3D.transform.localPosition = new Vector3(25.5f, 24.1f, -23.8f);
                     }
-                    nuevaFicha.transform.SetParent(casillas.transform, false);
+                   
 
                 }
             }));
@@ -1729,7 +1740,7 @@ public class VentanaTablero3D : MonoBehaviour
         if (jugBBDD != null){
             foreach (Jugador ju in jugBBDD)
             {
-                Jugador3D jugador3D = new Jugador3D(ju.Nombre,ju.ColorIcono, ju.RutaImagen, ju.Ficha, 0);
+                Jugador3D jugador3D = new Jugador3D(ju.Nombre,ju.ColorIcono, ju.RutaImagen, ju.Ficha, ju.Posicion);
                 jugadores.Add(jugador3D.Nombre, jugador3D);
 
                 AñadirIcono(ju.Nombre, ju.RutaImagen, ju.ColorIcono,cont);
@@ -1738,15 +1749,160 @@ public class VentanaTablero3D : MonoBehaviour
 
             }
         }
-        ClaseManagerBBDD.Instance.SelectAll<Jugador>();
+        //ClaseManagerBBDD.Instance.SelectAll<Jugador>();
     }
+
 
     void CargarColores() {
 
         coloresJu = ClaseManagerBBDD.Instance.SelectAll<ColorJugadores>();
     }
 
+    IEnumerator MovimientoHada2()
+    {
+        Camera camaraComponente = camaraPopup.GetComponent<Camera>();
+        if (camaraComponente != null)
+        {
+            Debug.Log($"Cámara activa: {camaraComponente.enabled}");
+            Debug.Log($"RenderTexture asignada: {camaraComponente.targetTexture}");
+        }
+        else
+        {
+            Debug.LogError("Error: El GameObject no tiene un componente Camera.");
+        }
 
+
+        // Posición y rotación relativa de la cámara de referencia
+        Vector3 destinoFinal = camaraReferencia.transform.localPosition;
+        Quaternion rotacionFinal = camaraReferencia.transform.localRotation;
+
+        // Posiciones relativas dentro del padre
+        Vector3 inicio = posicionesTablero[((filas * columnas) - 1)] + new Vector3(0, 5.1f, 0);
+        Vector3 alturaFinal = posicionesTablero[((filas * columnas) - 1)] + new Vector3(0, 10f, 0);
+
+        float suavizado = 1.5f;
+        Vector3 velocidad = Vector3.zero;
+
+        // Vista inicial girada 180° para que el hada mire en la dirección opuesta
+        Quaternion rotInicial = Quaternion.Euler(90f, 180f, 0f);
+        Quaternion rotFinal = Quaternion.Euler(40f, 180f, 0f);
+
+        camaraPopup.transform.localRotation = rotInicial;
+
+        float t = 0;
+        while (t < 1)
+        {
+            t += Time.deltaTime * suavizado;
+
+            //  Asegurar que la interpolación usa `localPosition`
+            camaraPopup.transform.localPosition = Vector3.Lerp(inicio, alturaFinal, t);
+
+            //  Levantar la mirada progresivamente mientras sube
+            camaraPopup.transform.localRotation = Quaternion.Lerp(rotInicial, rotFinal, t);
+
+            yield return null;
+        }
+
+        yield return new WaitForSeconds(0.3f);
+
+        //  Movimiento fluido de izquierda a derecha con el mismo sistema de coordenadas
+        Quaternion rotIzquierda = Quaternion.Euler(40f, 130f, 0f);
+        Quaternion rotDerecha = Quaternion.Euler(40f, 230f, 0f);
+
+        t = 0;
+        while (t < 1)
+        {
+            t += Time.deltaTime * suavizado;
+            camaraPopup.transform.localRotation = Quaternion.Lerp(rotFinal, rotIzquierda, t);
+            yield return null;
+        }
+
+        t = 0;
+        while (t < 1)
+        {
+            t += Time.deltaTime * suavizado;
+            camaraPopup.transform.localRotation = Quaternion.Lerp(rotIzquierda, rotDerecha, t);
+            yield return null;
+        }
+        // Mantener la vista en `rotDerecha` mientras avanza a la salida
+        t = 0;
+        while (t < 1)
+        {
+            t += Time.deltaTime * suavizado;
+            t = Mathf.Clamp01(t);
+
+            if (!DatosEscena.EscenaAnterior.Equals("MenuUsuarios"))
+            {
+                camaraPopup.transform.localPosition = Vector3.Lerp(alturaFinal, destinoFinal, t);
+                camaraPopup.transform.localRotation = rotDerecha;
+            }
+            else
+            {
+                Vector3 objetivoLocal = fichas[jugadores[turnos[jugadorActual]].Ficha].transform.localPosition;
+                camaraPopup.transform.localPosition = Vector3.Lerp(alturaFinal, objetivoLocal, t);
+                camaraPopup.transform.LookAt(fichas[jugadores[turnos[jugadorActual]].Ficha].transform.position);
+            }
+
+            ultimaPosicion = camaraPopup.transform.localPosition; // Guardar última posición antes de la siguiente fase
+            yield return null;
+        }
+
+        Camera camaraFicha = fichas[jugadores[turnos[jugadorActual]].Ficha].GetComponentInChildren<Camera>();
+        //Vector3 objetivoCamara = camaraFicha.transform.TransformPoint(camaraFicha.transform.localPosition);  // Posición absoluta de la cámara de la ficha
+        //Vector3 objetivoRelativo = fichas[jugadores[turnos[jugadorActual]].Ficha].transform.localPosition;
+
+        //Quaternion rotacionObjetivo = Quaternion.LookRotation(objetivoRelativo - camaraPopup.transform.localPosition);
+
+        // Convertir la posición local de `camaraFicha` al sistema de coordenadas del abuelo
+        //Vector3 objetivoGlobal = fichas[jugadores[turnos[jugadorActual]].Ficha].transform.TransformPoint(camaraFicha.transform.localPosition);
+        // Usar la orientación correcta según la escena
+        //Vector3 direccionObjetivo = (objetivoGlobal - camaraPopup.transform.position).normalized;
+        //Quaternion rotacionDestino = Quaternion.LookRotation(direccionObjetivo, camaraPopup.transform.up);
+        //Quaternion rotacionDestino = Quaternion.LookRotation(direccionObjetivo, Vector3.up); // Asegurar eje correcto
+        // Ajustar la dirección de la mirada correctamente hacia la ficha
+         //Camera camaraFicha = fichas[jugadores[turnos[jugadorActual]].Ficha].GetComponentInChildren<Camera>();
+        // La posición ya está en destinoFinal, ahora hacemos la transición sin retroceso
+        t = 0;
+        while (t < 1)
+        {
+            t += Time.deltaTime * suavizado;
+            t = Mathf.Clamp01(t);
+
+            if (!DatosEscena.EscenaAnterior.Equals("MenuUsuarios"))
+            {
+                camaraPopup.transform.localPosition = Vector3.Lerp(ultimaPosicion, destinoFinal, t);
+                camaraPopup.transform.localRotation = Quaternion.Lerp(rotDerecha, rotacionFinal, t);
+            }
+            else
+            {
+                // Dirección hacia la ficha
+                Vector3 direccionFicha = fichas[jugadores[turnos[jugadorActual]].Ficha].transform.position - camaraPopup.transform.position;
+
+                // Definir la dirección final hacia donde debe mirar al terminar el movimiento
+                Vector3 direccionFinal = -direccionFicha; // Opuesta a la dirección inicial
+
+                Quaternion rotacionInicial = camaraPopup.transform.localRotation;
+                Quaternion rotacionObjetivo = Quaternion.LookRotation(direccionFinal, Vector3.up); // Ajuste para que mire hacia donde venía
+                                                                                                   // Definir correctamente `objetivoGlobal`
+                Vector3 objetivoGlobal = fichas[jugadores[turnos[jugadorActual]].Ficha].transform.TransformPoint(camaraFicha.transform.localPosition);
+
+                camaraPopup.transform.localPosition = Vector3.Lerp(ultimaPosicion, camaraPopup.transform.parent.InverseTransformPoint(objetivoGlobal), t);
+
+                // Aplicamos Slerp para que gire progresivamente y al final mire hacia donde venía
+                camaraPopup.transform.localRotation = Quaternion.Slerp(rotacionInicial, rotacionObjetivo, t);
+            }
+
+            yield return null;
+        }
+
+
+
+
+        popupTablero2D.gameObject.SetActive(false);
+        popupPreCarga.gameObject.SetActive(false);
+
+        MostrarPopupTurno();
+    }
     IEnumerator MovimientoHada()
     {
         Camera camaraComponente = camaraPopup.GetComponent<Camera>();
@@ -1835,11 +1991,14 @@ public class VentanaTablero3D : MonoBehaviour
         {
             t += Time.deltaTime * suavizado;
 
+
+
             // Iniciamos desde la posición donde terminó el movimiento anterior
             camaraPopup.transform.localPosition = Vector3.Lerp(camaraPopup.transform.localPosition, destinoFinal, Mathf.Clamp01(t));
 
             // Transición natural a la rotación final
             camaraPopup.transform.localRotation = Quaternion.Lerp(rotDerecha, rotacionFinal, Mathf.Clamp01(t));
+
 
             yield return null;
         }
@@ -1858,11 +2017,15 @@ public class VentanaTablero3D : MonoBehaviour
         ColorUtility.TryParseHtmlString(jugadores[turnos[jugadorActual]].ColorIcono, out Color color2);
 
         popupTurno.transform.Find("Contenedor").GetComponent<Image>().color = color2;
-        popupTurno.GetComponentInChildren<TMP_Text>().text="¡¡Te toca\n"+ jugadores[turnos[jugadorActual]].Nombre+"!!";
+        popupTurno.GetComponentInChildren<TMP_Text>().text = "¡¡Te toca\n" + jugadores[turnos[jugadorActual]].Nombre + "!!";
 
         popupTurno.SetActive(true);
         yield return new WaitForSeconds(2); // Espera 2 segundos
         popupTurno.SetActive(false);
+
+        
+        if (contAutoGuardado >= jugadores.Count) { GuardarPartida(); contAutoGuardado = 0; };
+        contAutoGuardado++;
     }
     void MostrarPopupTurno()
     {
@@ -1974,7 +2137,7 @@ public class VentanaTablero3D : MonoBehaviour
 
         popupMinijuegos.SetActive(true);
 
-        GameObject cartaActiva;
+        
         foreach (Transform child in contenedorCartas)
             Destroy(child.gameObject);
 
@@ -2007,32 +2170,28 @@ public class VentanaTablero3D : MonoBehaviour
                 txt.text = frase;
         }
 
-        Button btn = cartaActiva.GetComponent<Button>();
-        if (btn != null)
-        {
-            btn.onClick.RemoveAllListeners();
-            btn.onClick.AddListener(() =>
-            {
-                RectTransform r = cartaActiva.GetComponent<RectTransform>();
-                if (r != null)
-                {
-                    LeanTween.moveX(r, Screen.width, 0.4f).setEaseInExpo().setOnComplete(() =>
-                    {
-                        Destroy(cartaActiva);
-                        cartaActiva = null;
-                    });
-                }
-            });
-        }
-        
     }
 
-    public void Continuar() { 
-    
-        popupMinijuegos.SetActive(false);
-        block = false;
-        blockBotonVista = false;
-        MostrarPopupTurno();
+    IEnumerator DestruirCarta() {
+        RectTransform r = cartaActiva.GetComponent<RectTransform>();
+        if (r != null)
+        {
+            LeanTween.moveX(r, Screen.width, 0.4f).setEaseInExpo().setOnComplete(() =>
+            {
+                Destroy(cartaActiva);
+                cartaActiva = null;
+                popupMinijuegos.SetActive(false);
+                block = false;
+                blockBotonVista = false;
+                MostrarPopupTurno();
+            });
+        }
+        yield return null;
+    }
+
+    public void Continuar() {
+        StartCoroutine(DestruirCarta());
+
     }
     //Cargar MiniJuegos
     void CargarCSV(string rutaRecursos, List<string> listaDestino)
@@ -2076,6 +2235,8 @@ public class VentanaTablero3D : MonoBehaviour
             hayPartida = true;
         }
 
+        jugadorActual= configMinijuegos[0].jugadorActual;
+
         string[] minijuegos = configMinijuegos[0].minijuegos.Split(':', StringSplitOptions.RemoveEmptyEntries);
         string[] minijuegos18 = configMinijuegos[0].minijuegos18.Split(':', StringSplitOptions.RemoveEmptyEntries);
         int cont = 0;
@@ -2115,333 +2276,37 @@ public class VentanaTablero3D : MonoBehaviour
 
 
 
-
-
-    //3 Cartas, Mas Probable, Quien fue, Yo nunca--------------------------------------------------------------------------------------------------------------------
-    /*
-      private List<string> frases = new List<string>();
-      private RectTransform cartaRect;
-
-      private float duracion = 0.4f;
-      private Vector2 centro = Vector2.zero;
-      private Vector2 derecha = new Vector2(2000, 0);
-      private Vector2 izquierda = new Vector2(-2000, 0);
-
-      private bool bloqueado = false;
-
-      public void MostrarCarta()
-      {
-          if (bloqueado || frases.Count == 0) return;
-          StartCoroutine(AnimarCarta());
-      }
-
-      private IEnumerator AnimarCarta()
-      {
-          bloqueado = true;
-
-          int index = Random.Range(0, frases.Count);
-          textoCarta.text = frases[index];
-
-          if (carta.activeSelf)
-          {
-              LeanTween.move(cartaRect, derecha, duracion).setOnComplete(() =>
-              {
-                  cartaRect.anchoredPosition = izquierda;
-                  LeanTween.move(cartaRect, centro, duracion);
-              });
-          }
-          else
-          {
-              carta.SetActive(true);
-              cartaRect.anchoredPosition = izquierda;
-              LeanTween.move(cartaRect, centro, duracion);
-          }
-
-          yield return new WaitForSeconds(1f);
-          bloqueado = false;
-      }
-
-      //Verdad o Reto-------------------------------------------------------------------------------------------------------------------------
-
-      public GameObject cartaVerdad;
-      public GameObject cartaReto;
-
-      public TextMeshProUGUI txtCartaVerdad;
-      public TextMeshProUGUI txtCartaReto;
-
-      private List<string> preguntasVerdad = new List<string>();
-      private List<string> preguntasReto = new List<string>();
-
-      private RectTransform cartaVerdadRect;
-      private RectTransform cartaRetoRect;
-
-
-      public void MostrarVerdad()
-      {
-          if (bloqueado || preguntasVerdad.Count == 0) return;
-          StartCoroutine(AnimarCarta("verdad"));
-      }
-
-      public void MostrarReto()
-      {
-          if (bloqueado || preguntasReto.Count == 0) return;
-          StartCoroutine(AnimarCarta("reto"));
-      }
-
-      private IEnumerator AnimarCarta(string tipo)
-      {
-          bloqueado = true;
-
-          if (tipo == "verdad")
-          {
-              int index = Random.Range(0, preguntasVerdad.Count);
-              txtCartaVerdad.text = preguntasVerdad[index];
-
-              if (cartaVerdad.activeSelf)
-              {
-                  LeanTween.move(cartaVerdadRect, derecha, duracion).setOnComplete(() =>
-                  {
-                      cartaVerdadRect.anchoredPosition = izquierda;
-                      LeanTween.move(cartaVerdadRect, centro, duracion);
-                  });
-              }
-              else
-              {
-                  if (cartaReto.activeSelf)
-                  {
-                      LeanTween.move(cartaRetoRect, derecha, duracion).setOnComplete(() =>
-                      {
-                          cartaReto.SetActive(false);
-                      });
-                  }
-
-                  cartaVerdad.SetActive(true);
-                  cartaVerdadRect.anchoredPosition = izquierda;
-                  LeanTween.move(cartaVerdadRect, centro, duracion);
-              }
-          }
-          else if (tipo == "reto")
-          {
-              int index = Random.Range(0, preguntasReto.Count);
-              txtCartaReto.text = preguntasReto[index];
-
-              if (cartaReto.activeSelf)
-              {
-                  LeanTween.move(cartaRetoRect, derecha, duracion).setOnComplete(() =>
-                  {
-                      cartaRetoRect.anchoredPosition = izquierda;
-                      LeanTween.move(cartaRetoRect, centro, duracion);
-                  });
-              }
-              else
-              {
-                  if (cartaVerdad.activeSelf)
-                  {
-                      LeanTween.move(cartaVerdadRect, derecha, duracion).setOnComplete(() =>
-                      {
-                          cartaVerdad.SetActive(false);
-                      });
-                  }
-
-                  cartaReto.SetActive(true);
-                  cartaRetoRect.anchoredPosition = izquierda;
-                  LeanTween.move(cartaRetoRect, centro, duracion);
-              }
-          }
-
-          yield return new WaitForSeconds(1f);
-          bloqueado = false;
-      }
-    */
-
-    //Botella----------------------------------------------------------------------------------------------------------------
-    /*
-    public RectTransform botella;
-    public RectTransform ruletaTransform;
-    public GameObject sectorPrefab;
-    public RectTransform contenedorCartas;
-
-    public float duracionGiro = 3f;
-
-    private bool girando = false;
-    private List<GameObject> sectores = new List<GameObject>();
-    private GameObject cartaActiva;
-    List<MinijuegoTablero> miniJuegosRuleta = new List<MinijuegoTablero>();
-    Dictionary<string, List<string>> cartasRuleta = new Dictionary<string, List<string>>();
-
-    
-    
-    public void CrearRuleta()
-    {
-        foreach (var sector in sectores)
-        {
-            Destroy(sector);
-        }
-        sectores.Clear();
-
-        int cantidad = miniJuegosRuleta.Count;
-        if (cantidad == 0) return;
-
-        float anguloSector = 360f / cantidad;
-
-        for (int i = 0; i < cantidad; i++)
-        {
-            var data = miniJuegosRuleta[i];
-
-            GameObject sector = Instantiate(sectorPrefab, ruletaTransform);
-            sector.transform.localRotation = Quaternion.Euler(0, 0, -i * anguloSector);
-            sector.GetComponent<Image>().fillAmount = 1f / cantidad;
-
-            ColorUtility.TryParseHtmlString(data.color, out Color color);
-            sector.GetComponent<Image>().color = color;
-
-            sectores.Add(sector);
-
-            List<string> textos = new List<string>();
-            CargarCSV(miniJuegosRuleta[i].rutaArchivoCSV, textos);
-
-            cartasRuleta.Add(miniJuegosRuleta[i].nombre, textos);
-
-        }
-    }
-
-    public void GirarBotella()
-    {
-        if (girando) return;
-
-        if (cartaActiva != null)
-        {
-            RectTransform rect = cartaActiva.GetComponent<RectTransform>();
-            if (rect != null)
-            {
-                LeanTween.moveX(rect, Screen.width, 0.4f).setEaseInExpo().setOnComplete(() =>
-                {
-                    Destroy(cartaActiva);
-                    cartaActiva = null;
-                    StartCoroutine(Girar());
-                });
-                return;
-            }
-            else
-            {
-                Destroy(cartaActiva);
-                cartaActiva = null;
-            }
-        }
-
-        StartCoroutine(Girar());
-    }
-
-    private IEnumerator Girar()
-    {
-        girando = true;
-
-        float anguloInicial = botella.eulerAngles.z;
-        float anguloFinal = Random.Range(0f, 360f) + 360f * 5;
-        float tiempo = 0f;
-
-        while (tiempo < duracionGiro)
-        {
-            float t = tiempo / duracionGiro;
-            float angulo = Mathf.Lerp(anguloInicial, anguloFinal, Mathf.SmoothStep(0f, 1f, t));
-            botella.rotation = Quaternion.Euler(0f, 0f, angulo);
-            tiempo += Time.deltaTime;
-            yield return null;
-        }
-
-        botella.rotation = Quaternion.Euler(0f, 0f, anguloFinal % 360f);
-
-        yield return new WaitForSeconds(0.5f);
-
-        Vector2 direccion = botella.up;
-        float anguloBotella = Mathf.Atan2(direccion.y, direccion.x) * Mathf.Rad2Deg;
-        anguloBotella = (450f - anguloBotella) % 360f;
-
-        int cantidad = SeleccionMinijuegos.miniJuegos.Count;
-        float anguloPorSector = 360f / cantidad;
-        int index = Mathf.FloorToInt(anguloBotella / anguloPorSector);
-
-        MostrarCarta(index);
-        girando = false;
-    }
-
-    private void MostrarCarta(int index)
-    {
-        foreach (Transform child in contenedorCartas)
-            Destroy(child.gameObject);
-
-        var data = miniJuegosRuleta[index];
-
-        cartaActiva = Instantiate(cartas[miniJuegosRuleta[index].nombre], contenedorCartas);
-        RectTransform rect = cartaActiva.GetComponent<RectTransform>();
-
-        if (rect != null)
-        {
-            rect.anchorMin = new Vector2(0.5f, 0.5f);
-            rect.anchorMax = new Vector2(0.5f, 0.5f);
-            rect.pivot = new Vector2(0.5f, 0.5f);
-            rect.anchoredPosition = new Vector2(-Screen.width, 0);
-            rect.localScale = Vector3.one;
-
-            LeanTween.moveX(rect, 0f, 0.5f).setEaseOutExpo();
-        }
-        
-        if (data.archivoCSV != null)
-        {
-            string[] lineas = data.archivoCSV.text.Split('\n');
-            string frase = lineas[Random.Range(0, lineas.Length)].Trim();
-
-            var txt = cartaActiva.GetComponentInChildren<TextMeshProUGUI>();
-            if (txt != null)
-                txt.text = frase;
-        }
-        
-        Button btn = cartaActiva.GetComponent<Button>();
-        if (btn != null)
-        {
-            btn.onClick.RemoveAllListeners();
-            btn.onClick.AddListener(() =>
-            {
-                RectTransform r = cartaActiva.GetComponent<RectTransform>();
-                if (r != null)
-                {
-                    LeanTween.moveX(r, Screen.width, 0.4f).setEaseInExpo().setOnComplete(() =>
-                    {
-                        Destroy(cartaActiva);
-                        cartaActiva = null;
-                    });
-                }
-            });
-        }
-    }
-*/
-
     //Cerrar Aplicacion
-
-    void OnApplicationQuit()
+    void OnApplicationPause(bool pauseStatus)
     {
-        GuardarDatosPartida(); // Método que guarda la partida en SQLite antes de cerrar
+        if (pauseStatus)
+        {
+            GuardarPartida();
+        }
+    }
+
+    void GuardarPartida() {
+        GuardarDatosPartida();
         GuardarConfiguracion();
     }
-
     void GuardarDatosPartida() {
 
-        List<Jugador3D> jugadores3D = new List<Jugador3D>(); 
+        
         try
         {
-            jugadores3D = ClaseManagerBBDD.Instance.SelectAll<Jugador3D>();
-            ClaseManagerBBDD.Instance.DeleteAll<Jugador3D>();
+            ClaseManagerBBDD.Instance.DeleteAll<Jugador>();
         }
         catch
         {
-            ClaseManagerBBDD.Instance.CreateTable<Jugador3D>();
+            ClaseManagerBBDD.Instance.CreateTable<Jugador>();
         }
 
         if (jugBBDD != null)
         {
             foreach (KeyValuePair<string,Jugador3D> ju in jugadores)
             {
-                ClaseManagerBBDD.Instance.Insert<Jugador3D>(ju.Value);
+                Debug.Log(ju.Key+ ": "+ju.Value.Posicion);
+                ClaseManagerBBDD.Instance.Insert<Jugador>(new Jugador(ju.Value.Nombre,ju.Value.RutaIcono,ju.Value.ColorIcono, ju.Value.Ficha.Substring(0, ju.Value.Ficha.LastIndexOf(" ")),ju.Value.Posicion));
             }
 
         }
@@ -2451,6 +2316,8 @@ public class VentanaTablero3D : MonoBehaviour
     void GuardarConfiguracion() {
 
         ClaseManagerBBDD.Instance.DeleteAll<ConfiguracionTablero>();
+        configMinijuegos[0].jugadorActual=jugadorActual;
+        configMinijuegos[0].continuarPartida = "S";
         ClaseManagerBBDD.Instance.Insert<ConfiguracionTablero>(configMinijuegos[0]);
 
     }

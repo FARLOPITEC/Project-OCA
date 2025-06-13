@@ -73,6 +73,7 @@ public class ManagerJugadores : MonoBehaviour
         }
         catch (Exception e)
         {
+            
             Debug.LogError("Error al conectar con la base de datos: " + e.Message);
         }
 
@@ -107,7 +108,7 @@ public class ManagerJugadores : MonoBehaviour
 
             popupContinuarPartida.gameObject.SetActive(true);
         }
-        else if(Jug!=null){
+        else{
             ClaseManagerBBDD.Instance.DeleteAll<Jugador>();
         }
         
@@ -121,7 +122,7 @@ public class ManagerJugadores : MonoBehaviour
         {
             Debug.LogError("Error crítico antes del cierre: " + e.Message);
         }
-
+        
     }
 
 
