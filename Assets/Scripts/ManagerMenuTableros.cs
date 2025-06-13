@@ -62,6 +62,7 @@ public class ManagerMenuTableros : MonoBehaviour
         popupConfiguracionTableros.SetActive(false);
         fondoDifuminado.SetActive(false);
         //managerBBDD.CloseDatabase();
+        DatosEscena.EscenaAnterior = SceneManager.GetActiveScene().name;
         SceneManager.LoadScene("GenerarTablero");
 
 

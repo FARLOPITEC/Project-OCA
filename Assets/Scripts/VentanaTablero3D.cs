@@ -4,6 +4,7 @@ using System.Collections.Generic;
 
 using System.IO;
 using System.Linq;
+using System.Threading.Tasks;
 using TMPro;
 using Unity.Mathematics;
 using Unity.VisualScripting.FullSerializer;
@@ -170,7 +171,13 @@ public class VentanaTablero3D : MonoBehaviour
     void Start()
     {
 
-        StartCoroutine(MovimientoHada());
+        if (DatosEscena.EscenaAnterior.Equals("MenuUsuarios")) {
+            popupPreCarga.SetActive(false);
+            popupTablero2D.SetActive(false);
+        } else {
+            StartCoroutine(MovimientoHada());
+        }
+        
         
         //Dado
         posicionInicial = dado.transform.position;
@@ -205,10 +212,11 @@ public class VentanaTablero3D : MonoBehaviour
 
         MoverFicha2DAlFinal(fichas[jugadores[turnos[jugadorActual]].Ficha]);
         TurnoCamara(fichas[jugadores[turnos[jugadorActual]].Ficha]);
-        VerificarSuperposicion();
+        VerificarSuperposicion(jugadores[turnos[jugadorActual]].Posicion);
 
 
     }
+
 
 
 
@@ -474,6 +482,7 @@ public class VentanaTablero3D : MonoBehaviour
         }
         callback?.Invoke(nuevaFicha);
     }
+
     string ColorHexToName(string color) {
         
         string nombre="";
@@ -664,12 +673,13 @@ public class VentanaTablero3D : MonoBehaviour
         {
             if (turnos[i].Equals(turnos[jugadorActual]))
             {
+                fichas[jugadores[turnos[i]].Ficha].transform.Find("CameraFicha").gameObject.SetActive(true);
                 MoverFicha2DAlFinal(fichas[jugadores[turnos[jugadorActual]].Ficha]);
 
                 TurnoMaterial(jugadorActual);
-                VerificarSuperposicion();
+                //VerificarSuperposicion();
 
-                fichas[jugadores[turnos[i]].Ficha].transform.Find("CameraFicha").gameObject.SetActive(true);
+                
 
                 
 
@@ -684,46 +694,52 @@ public class VentanaTablero3D : MonoBehaviour
 
     }
 
-    void VerificarSuperposicion()
+    void VerificarSuperposicion2()
     {
-        
-        foreach (KeyValuePair<string,Jugador3D> jugador in jugadores)
+        int posicionJugadorActual = jugadores[turnos[jugadorActual]].Posicion; // Obtener posición del jugador actual
+
+        foreach (KeyValuePair<string, Jugador3D> jugador in jugadores)
         {
-            hayOtraFichaEnMismaCasilla = false;
-
-            // Comprobar si hay otra ficha en la misma casilla
-            foreach (KeyValuePair<string, Jugador3D> otroJugador in jugadores)
+            if (jugador.Value.Posicion == posicionJugadorActual) // Solo afecta a quienes coincidan con el jugador actual
             {
-                if (jugador.Value != otroJugador.Value && jugador.Value.Posicion == otroJugador.Value.Posicion)
-                {
-                    hayOtraFichaEnMismaCasilla = true;
-                    break;
-                }
-            }
-
-            // Si hay otra ficha, hacerla transparente; si no, volver a visible
-            if (hayOtraFichaEnMismaCasilla)
-            {
-                hayOtraFichaEnMismaCasilla = true;
                 if (jugador.Value.Nombre.Equals(turnos[jugadorActual]))
                 {
-                    HacerVisible(fichas[jugador.Value.Ficha]);
+                    HacerVisible(fichas[jugador.Value.Ficha]); // Mantener visible la ficha del jugador actual
                 }
                 else
                 {
-                    HacerInvisible(fichas[jugador.Value.Ficha]);
+                    HacerInvisible(fichas[jugador.Value.Ficha]); // Ocultar solo las fichas que coinciden en su casilla con él
                 }
-
             }
-            else {
-                hayOtraFichaEnMismaCasilla = false;
-                HacerVisible(fichas[jugador.Value.Ficha]);
+            else
+            {
+                HacerVisible(fichas[jugador.Value.Ficha]); // Si no están en la misma casilla, mantenerlas visibles
             }
-            
         }
-        
     }
-    void GestionarVisibilidadFicha(int posicionActual, int siguientePosicion)
+
+    void VerificarSuperposicion(int siguienteCasilla)
+    {
+        int posicionJugadorActual = jugadores[turnos[jugadorActual]].Posicion; // Obtener posición del jugador actual
+
+        foreach (KeyValuePair<string, Jugador3D> jugador in jugadores)
+        {
+            // Si la ficha está en la siguiente casilla, hacerla invisible temporalmente
+            if (jugador.Value.Posicion == siguienteCasilla)
+            {
+                if (!jugador.Value.Nombre.Equals(turnos[jugadorActual]))
+                {
+                    HacerInvisible(fichas[jugador.Value.Ficha]); // Ocultar solo las fichas que están en la siguiente casilla
+                }
+            }
+            // Si la ficha ya ha sido alcanzada, volverla visible
+            else if (jugador.Value.Posicion == posicionJugadorActual)
+            {
+                HacerVisible(fichas[jugador.Value.Ficha]); // La ficha vuelve a aparecer cuando el jugador la supera
+            }
+        }
+    }
+    void GestionarVisibilidadFicha3(int posicionActual, int siguientePosicion)
     {
         foreach (KeyValuePair<string, Jugador3D> jugador in jugadores)
         {
@@ -739,7 +755,24 @@ public class VentanaTablero3D : MonoBehaviour
         }
     }
 
+    void GestionarVisibilidadFicha2(int posicionActual, int siguientePosicion)
+    {
+        foreach (KeyValuePair<string, Jugador3D> jugador in jugadores)
+        {
+            // Si el jugador ya está en la casilla destino, ocultamos su ficha
+            if (jugador.Value.Posicion == siguientePosicion && !jugador.Key.Equals(turnos[jugadorActual]))
+            {
+                fichas[jugador.Value.Ficha].SetActive(false);
+            }
 
+            // Si el jugador deja la casilla, volvemos a activar su ficha
+            if (jugador.Value.Posicion == posicionActual && !jugador.Key.Equals(turnos[jugadorActual]))
+            {
+                fichas[jugador.Value.Ficha].SetActive(true);
+            }
+        }
+    }
+   
     void PersonalizarFicha() {
         int cont = 1;
         
@@ -783,6 +816,10 @@ public class VentanaTablero3D : MonoBehaviour
                         //Debug.Log("posicionInicial: "+ ju.Value.Posicion + " "+ posicionInicial);
                         nuevaFicha.transform.localPosition = posicionInicial;
                         //camaraBoton3D.transform.localPosition = new Vector3(25.5f, 24.1f, -23.8f);
+                        // Aplicar la rotación correcta a cada ficha
+                        
+                        Quaternion rotacionFicha = CalcularRotacionFicha(ju.Value.Posicion);
+                        nuevaFicha.transform.localRotation = rotacionFicha;
                     }
                    
 
@@ -794,8 +831,133 @@ public class VentanaTablero3D : MonoBehaviour
         
     }
 
+    Quaternion CalcularRotacionFicha2(int posicion)
+    {
+        int tamanoTablero = filas;
+        int x = 0, z = 0; // Posición inicial en la espiral
+        int dx = 0, dz = -1; // Movimiento inicial: hacia la derecha
 
+        int leftBound = 0, rightBound = columnas - 1;
+        int topBound = 0, bottomBound = filas - 1;
 
+        Quaternion rotacionFicha = Quaternion.identity;
+
+        for (int i = 0; i < posicion; i++)
+        {
+            x += dx;
+            z += dz;
+
+            Debug.Log("dx: "+dx+" x: "+x+" dz: "+dz+" z: "+ z);
+
+            // Cambiar dirección en sentido antihorario
+            if (dx == 1 && x > rightBound) // Derecha  Arriba
+            {
+                Debug.Log("Arriba");
+                dx = 0; dz = 1; x--; z++;
+                topBound++;
+                rotacionFicha = Quaternion.Euler(-90f, 0f, 0f);
+            }
+            else if (dz == 1 && z > bottomBound) // Arriba  Izquierda
+            {
+                Debug.Log("Izquierda");
+                dx = -1; dz = 0; z--; x--;
+                rightBound--;
+                rotacionFicha = Quaternion.Euler(-90f, -90f, 0f);
+            }
+            else if (dx == -1 && x < leftBound) // Izquierda  Abajo
+            {
+                Debug.Log("Abajo");
+                dx = 0; dz = -1; x++; z--;
+                bottomBound--;
+                rotacionFicha = Quaternion.Euler(-90f, 180f, 0f);
+            }
+            else if (dz == -1 && z < topBound) // Abajo  Derecha
+            {
+                Debug.Log("Derecha");
+                dx = 1; dz = 0; z++; x++;
+                leftBound++;
+                rotacionFicha = Quaternion.Euler(-90f, 90f, 0f);
+            }
+        }
+
+        // Ajuste adicional si la ficha está en una esquina
+        if (tableroEsquina.Contains(posicion))
+        {
+            rotacionFicha *= Quaternion.Euler(0f, 0f, 45f); // Ajuste de esquina
+        }
+
+        return rotacionFicha;
+    }
+
+    Quaternion CalcularRotacionFicha(int posicion)
+    {
+        int tamanoTablero = filas;
+        int x = 0, z = 0; // Posición inicial en la espiral
+        int dx = 0, dz = -1; // Movimiento inicial: hacia la derecha
+
+        int leftBound = 0, rightBound = columnas - 1;
+        int topBound = 0, bottomBound = filas - 1;
+
+        Quaternion rotacionFicha = Quaternion.identity;
+        Quaternion ultimaRotacion = Quaternion.identity; // Guardamos la última rotación válida
+
+        for (int i = 0; i < posicion; i++)
+        {
+            x += dx;
+            z += dz;
+
+            Debug.Log("dx: " + dx + " x: " + x + " dz: " + dz + " z: " + z);
+
+            // **Cambio de dirección en sentido antihorario**
+            if (dx == 1 && x >= rightBound) // Derecha  Arriba
+            {
+                Debug.Log("Arriba");
+                dx = 0; dz = 1; x--; z++;
+                topBound++;
+                ultimaRotacion = Quaternion.Euler(-90f, 0f, 0f);
+            }
+            else if (dz == 1 && z >= bottomBound) // Arriba  Izquierda
+            {
+                Debug.Log("Izquierda");
+                dx = -1; dz = 0; z--; x--;
+                rightBound--;
+                ultimaRotacion = Quaternion.Euler(-90f, -90f, 0f);
+            }
+            else if (dx == -1 && x <= leftBound) // Izquierda  Abajo
+            {
+                Debug.Log("Abajo");
+                dx = 0; dz = -1; x++; z--;
+                bottomBound--;
+                ultimaRotacion = Quaternion.Euler(-90f, 180f, 0f);
+            }
+            else if (dz == -1 && z <= topBound) // Abajo  Derecha
+            {
+                Debug.Log("Derecha");
+                dx = 1; dz = 0; z++; x++;
+                leftBound++;
+                ultimaRotacion = Quaternion.Euler(-90f, 90f, 0f);
+            }
+
+            // **Aplicar el giro correcto en el momento adecuado**
+            if (tableroEsquina.Contains(i + 1)) // Ajuste aquí para que la rotación se actualice correctamente
+            {
+                rotacionFicha = ultimaRotacion;
+            }
+        }
+
+        return rotacionFicha;
+    }
+
+    IEnumerator CalcularRotacionesSecuenciales(List<int> posiciones, GameObject ficha)
+{
+    foreach (int posicion in posiciones)
+    {
+        Quaternion rotacionFicha = CalcularRotacionFicha(posicion);
+        
+        ficha.transform.localRotation = rotacionFicha;
+        yield return new WaitForSeconds(0.1f); // Esperar un momento antes de pasar a la siguiente rotación
+    }
+}
     //Dado----------------------------------------------------------------------------
     public void tirarDado() {
         if (!block)
@@ -965,52 +1127,47 @@ public class VentanaTablero3D : MonoBehaviour
 
     }
 
-    IEnumerator MoverFichaPasoAPaso( int jugador, int resultadoDado)
+    IEnumerator MoverFichaPasoAPaso(int jugador, int resultadoDado)
     {
-        
-
         int nuevaPosicion = jugadores[turnos[jugador]].Posicion + resultadoDado;
+
         if (posicionesTablero.ContainsKey(nuevaPosicion))
         {
-            
             while (jugadores[turnos[jugador]].Posicion < nuevaPosicion)
             {
                 int siguienteCasilla = jugadores[turnos[jugador]].Posicion + 1;
-                GestionarVisibilidadFicha(jugadores[turnos[jugador]].Posicion, siguienteCasilla);
+
+                VerificarSuperposicion(siguienteCasilla); // Hacer invisible si hay ficha en la siguiente casilla
+
                 if (!posicionesTablero.ContainsKey(siguienteCasilla)) break; // Detener si la siguiente casilla no existe
-
-
-
-
 
                 Vector3 posicionInicial = casillas.transform.TransformPoint(posicionesTablero[jugadores[turnos[jugador]].Posicion]);
                 Vector3 posicionDestino = casillas.transform.TransformPoint(posicionesTablero[siguienteCasilla]);
-
 
                 float t = 0;
                 while (t < 1)
                 {
                     t += Time.deltaTime * velocidadMovimiento;
 
-                    // Movimiento con efecto de golpe en cada casilla
                     float salto = Mathf.Sin(t * Mathf.PI) * alturaSalto;
                     fichas[jugadores[turnos[jugadorActual]].Ficha].transform.position = Vector3.Lerp(posicionInicial, posicionDestino, t) + Vector3.up * salto;
 
                     yield return null;
                 }
-                GestionarVisibilidadFicha(jugadores[turnos[jugador]].Posicion, siguienteCasilla);
-                jugadores.GetValueOrDefault(turnos.GetValueOrDefault(jugador)).Posicion++;
-                //GestionarVisibilidadFicha(jugadores[turnos[jugador]].Posicion, siguienteCasilla);
-                yield return new WaitForSeconds(pausaEntreCasillas); // Pausa antes de seguir avanzando
-                                                                  // Si la casilla es una esquina, rotar la cámara
 
-                if (tableroEsquina.Contains(jugadores.GetValueOrDefault(turnos.GetValueOrDefault(jugadorActual)).Posicion))
+                jugadores[turnos[jugador]].Posicion++;
+
+                VerificarSuperposicion(jugadores[turnos[jugador]].Posicion); // Volver a hacer visible la ficha cuando la supera
+
+                yield return new WaitForSeconds(pausaEntreCasillas);
+
+                // Si la casilla es una esquina, rotar la cámara
+                if (tableroEsquina.Contains(jugadores[turnos[jugadorActual]].Posicion))
                 {
-                    
                     StartCoroutine(RotarCamaraSuavemente(anguloRotacion));
-
                 }
             }
+
             MostrarPopupGanador();
             jugadorActual = siguienteJugador(jugador);
             TurnoCamara(fichas[jugadores[turnos[jugadorActual]].Ficha]);
@@ -1018,12 +1175,9 @@ public class VentanaTablero3D : MonoBehaviour
             MoverFicha2DAlFinal(fichas2D[turnos[jugadorActual]]);
             MoverFicha2DAlFinal(fichasBTN2D[turnos[jugadorActual]]);
             MarcoJugador();
-
         }
-        
-        MostrarCarta(RamdomMinijuego());
 
-        
+        MostrarCarta(RamdomMinijuego());
     }
 
     IEnumerator RotarCamaraSuavemente(float anguloRot)
@@ -1094,7 +1248,7 @@ public class VentanaTablero3D : MonoBehaviour
             fichaPrefab2D.SetActive(false); 
             fichaBTNCasilla2D.SetActive(false); 
 
-               StartCoroutine(ObtenerPosicionCasilla(casillas2D[CalcularPosicionEnGrid(0)], botonCasillas2D[CalcularPosicionEnGrid(0)], (posicion,posicion2) =>
+               StartCoroutine(ObtenerPosicionCasilla(casillas2D[CalcularPosicionEnGrid(ju.Posicion)], botonCasillas2D[CalcularPosicionEnGrid(ju.Posicion)], (posicion,posicion2) =>
                {
           
                    fichaPrefab2D.GetComponent<RectTransform>().anchoredPosition = posicion;
@@ -1524,9 +1678,6 @@ public class VentanaTablero3D : MonoBehaviour
         }
     }
 
-
-
-
     Color[] RotarPixels180(Color[] pixels, int width, int height)
     {
         Color[] rotatedPixels = new Color[pixels.Length];
@@ -1571,9 +1722,6 @@ public class VentanaTablero3D : MonoBehaviour
        
         return texture;
     }
-
-    
-
 
     //Pruebas------------------------------------------------------------------------
     //Dicciopinta****************************************************************
