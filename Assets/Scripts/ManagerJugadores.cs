@@ -69,6 +69,7 @@ public class ManagerJugadores : MonoBehaviour
         try
         {
             ClaseManagerBBDD.Instance.Conectar(Path.Combine(Application.persistentDataPath, "JuegOcaBBDD.db"));
+            existeBaseDeDatos=true; 
             Debug.Log("Base de datos SQLite conectada correctamente.");
         }
         catch (Exception e)
@@ -110,7 +111,17 @@ public class ManagerJugadores : MonoBehaviour
         }
         else{
             ClaseManagerBBDD.Instance.DeleteAll<Jugador>();
-            ClaseManagerBBDD.Instance.DeleteAll<ConfiguracionTablero>();
+            try
+            {
+                ClaseManagerBBDD.Instance.DeleteAll<ConfiguracionTablero>();
+
+
+            }
+            catch
+            {
+                ClaseManagerBBDD.Instance.CreateTable<ConfiguracionTablero>();
+            }
+            
         }
         
 
@@ -370,7 +381,7 @@ public class ManagerJugadores : MonoBehaviour
             yield return StartCoroutine(GenerarColor(coH.Value, coH.Key));
 
             
-            if (!existeBaseDeDatos)
+            if (existeBaseDeDatos)
             {
                 colorJuBBDD = new ColorJugadores(coH.Key, coH.Value);
 

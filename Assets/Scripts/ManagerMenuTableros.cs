@@ -41,7 +41,7 @@ public class ManagerMenuTableros : MonoBehaviour
             Debug.LogError("Error al conectar con la base de datos: " + e.Message);
         }
 
-        ReiniciarTablaConfiguracion();
+        
 
         
         
@@ -70,6 +70,7 @@ public class ManagerMenuTableros : MonoBehaviour
 
     public void SeleccionTablero()
     {
+        ReiniciarTablaConfiguracion();
         popupConfiguracionTableros.SetActive(true);
         fondoDifuminado.SetActive(true);
         GameObject clickedButton = EventSystem.current.currentSelectedGameObject;

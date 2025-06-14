@@ -149,9 +149,8 @@ public class VentanaTablero3D : MonoBehaviour
 
     void Awake()
     {
-        if (primeraCarga)
-        {
-            // Inicialización de sqlite-net y otros elementos, solo la primera vez.
+        
+                    // Inicialización de sqlite-net y otros elementos, solo la primera vez.
             try
             {
                 ClaseManagerBBDD.Instance.Conectar(Path.Combine(Application.persistentDataPath, "JuegOcaBBDD.db"));
@@ -168,9 +167,6 @@ public class VentanaTablero3D : MonoBehaviour
             // Tablero y Fichas
             GenerarTablero3D(filas, columnas);
 
-            // Marcamos que ya se realizó la primera carga.
-            primeraCarga = false;
-        }
     }
 
   
@@ -182,7 +178,8 @@ public class VentanaTablero3D : MonoBehaviour
         if (DatosEscena.EscenaAnterior.Equals("MenuUsuarios"))
         {
             popupPreCarga.SetActive(false);
-            popupTablero2D.SetActive(false);
+            //popupTablero2D.SetActive(false);
+            
         }
         else
         {
@@ -210,15 +207,24 @@ public class VentanaTablero3D : MonoBehaviour
         // Tablero 2D
         GenerarTablero2D();
         AñadirFicha2D();
+       
         MoverFicha2DAlFinal(fichas2D[turnos[jugadorActual]]);
         MoverFicha2DAlFinal(fichasBTN2D[turnos[jugadorActual]]);
-
+        
         //// Configuración Tablero2D
         MoverFicha2DAlFinal(fichas[jugadores[turnos[jugadorActual]].Ficha]);
-        TurnoCamara(fichas[jugadores[turnos[jugadorActual]].Ficha]);
-        VerificarSuperposicion(jugadores[turnos[jugadorActual]].Posicion, jugadorActual);
-    }
 
+        TurnoCamara(fichas[jugadores[turnos[jugadorActual]].Ficha]);
+        
+        //VerificarSalida(jugadorActual);
+
+        if (DatosEscena.EscenaAnterior.Equals("MenuUsuarios"))
+        {
+            MostrarPopupTurno();
+
+        }
+
+    }
 
 
 
@@ -372,7 +378,7 @@ void Update()
                     textComponent.color = Color.red;
                     AsignarTextura(casilla, i, imagenesTableros[numeroTablero], filas);
                 }
-                else if (i == filas * columnas || i == 0)
+                else if (i == (filas * columnas)-1 || i == 0)
                 {
 
                 }
@@ -484,6 +490,8 @@ void Update()
         {
             yield return null;
         }
+
+
         callback?.Invoke(nuevaFicha);
     }
 
@@ -492,8 +500,10 @@ void Update()
         string nombre="";
         foreach (ColorJugadores coJu in coloresJu)
         {
+            
             if (coJu.Hexadecimal.Equals(color))
             {
+                
                 nombre = coJu.Nombre;
             }
 
@@ -506,7 +516,7 @@ void Update()
 
         Material material=null;
         foreach (Material mat in materiales) {
-
+            Debug.Log("mat: " + mat.name+ " ColorHexToName(color): "+ColorHexToName(color));
             if (mat.name.Equals(ColorHexToName(color)))
             {
                 material = mat;
@@ -681,11 +691,6 @@ void Update()
                 MoverFicha2DAlFinal(fichas[jugadores[turnos[jugadorActual]].Ficha]);
 
                 TurnoMaterial(jugadorActual);
-                //VerificarSuperposicion();
-
-                
-
-                
 
             }
             else
@@ -696,6 +701,26 @@ void Update()
             
         }
 
+    }
+    void ActualizarVisibilidadCeldaPorTurno(int casilla, int turnoActivo)
+    {
+        string jugadorActivo = turnos[turnoActivo];
+        foreach (KeyValuePair<string, Jugador3D> kvp in jugadores)
+        {
+            if (kvp.Value.Posicion == casilla)
+            {
+                if (kvp.Value.Nombre.Equals(jugadorActivo))
+                {
+                    HacerVisible(fichas[kvp.Value.Ficha]);
+                    Debug.Log("Mostrando ficha de " + kvp.Value.Nombre + " en casilla " + casilla);
+                }
+                else
+                {
+                    HacerInvisible(fichas[kvp.Value.Ficha]);
+                    Debug.Log("Ocultando ficha de " + kvp.Value.Nombre + " en casilla " + casilla);
+                }
+            }
+        }
     }
 
     void VerificarSuperposicion2()
@@ -770,7 +795,7 @@ void Update()
             }
         }
     }
-    void VerificarSuperposicion(int casilla, int jugador)
+    void VerificarSuperposicion5(int casilla, int jugador)
     {
         // Obtenemos el nombre del jugador que se está moviendo a partir del índice
         string currentPlayer = turnos[jugador];
@@ -790,6 +815,128 @@ void Update()
         foreach (KeyValuePair<string, Jugador3D> kvp in jugadores)
         {
             // Si el jugador NO es el actual y su posición coincide con la del jugador que hemos movido, la volvemos a mostrar
+            if (!kvp.Value.Nombre.Equals(currentPlayer) && kvp.Value.Posicion == posActual)
+            {
+                HacerVisible(fichas[kvp.Value.Ficha]);
+            }
+        }
+    }
+    // Función que, al iniciar el turno, comprueba la casilla 'casilla'
+    // y oculta cualquier ficha que no pertenezca al jugador activo.
+    void VerificarFichasEnCasillaAlIniciarTurno2(int casilla, int turnoActivo)
+    {
+        string jugadorActivo = turnos[turnoActivo];
+        Debug.Log("Verificando fichas en la casilla " + casilla + " para el turno de " + jugadorActivo);
+
+        foreach (KeyValuePair<string, Jugador3D> kvp in jugadores)
+        {
+            if (kvp.Value.Posicion == casilla)
+            {
+                // Si no es el jugador activo, se oculta la ficha.
+                if (!kvp.Value.Nombre.Equals(jugadorActivo))
+                {
+                    if (fichas.ContainsKey(kvp.Value.Ficha))
+                    {
+                        HacerInvisible(fichas[kvp.Value.Ficha]);
+                        Debug.Log("Ocultando ficha de " + kvp.Value.Nombre + " en la casilla " + casilla);
+                    }
+                }
+                else
+                {
+                    // Se asegura de que la ficha del jugador activo se vea.
+                    if (fichas.ContainsKey(kvp.Value.Ficha))
+                    {
+                        HacerVisible(fichas[kvp.Value.Ficha]);
+                        Debug.Log("Mostrando ficha de " + kvp.Value.Nombre + " en la casilla " + casilla);
+                    }
+                }
+            }
+        }
+    }
+
+    // Esta función se encarga de verificar en la casilla actual del jugador activo 
+    // y ocultar cualquier ficha que no le pertenezca. Es similar a la de salida, pero se usa
+    // al iniciar el turno.
+    public void VerificarFichasAlIniciarTurno(int turnoActivo)
+    {
+        // Obtenemos el nombre del jugador cuyo turno es activo
+        string jugadorActivo = turnos[turnoActivo];
+
+        // Obtenemos la casilla actual donde se encuentra el jugador activo
+        int casillaActual = jugadores[jugadorActivo].Posicion;
+
+        Debug.Log("Verificando fichas en la casilla " + casillaActual + " para el turno de " + jugadorActivo);
+
+        // Recorremos todos los jugadores para ver quiénes están en esa casilla
+        foreach (KeyValuePair<string, Jugador3D> kvp in jugadores)
+        {
+            // Si la ficha del jugador está en la misma casilla
+            if (kvp.Value.Posicion == casillaActual)
+            {
+                // Solo se muestra la ficha del jugador activo
+                if (kvp.Value.Nombre.Equals(jugadorActivo))
+                {
+                    HacerVisible(fichas[kvp.Value.Ficha]);
+                    Debug.Log("Mostrando ficha de " + kvp.Value.Nombre + " en la casilla " + casillaActual);
+                }
+                else
+                {
+                    HacerInvisible(fichas[kvp.Value.Ficha]);
+                    Debug.Log("Ocultando ficha de " + kvp.Value.Nombre + " en la casilla " + casillaActual);
+                }
+            }
+        }
+    }
+    public void VerificarSalida(int jugador)
+    {
+        string currentPlayer = turnos[jugador];
+        Debug.Log("Verificando la casilla de salida para el jugador " + currentPlayer);
+
+        foreach (KeyValuePair<string, Jugador3D> kvp in jugadores)
+        {
+            if (kvp.Value.Posicion == 0)
+            {
+                // Si el jugador es el que le toca, se muestra.
+                if (kvp.Value.Nombre.Equals(currentPlayer))
+                {
+                    HacerVisible(fichas[kvp.Value.Ficha]);
+                    Debug.Log("Ficha de " + kvp.Value.Nombre + " se muestra en la salida.");
+                }
+                else
+                {
+                    HacerInvisible(fichas[kvp.Value.Ficha]);
+                    Debug.Log("Ficha de " + kvp.Value.Nombre + " se oculta, no le toca.");
+                }
+            }
+        }
+    }
+
+
+
+    void VerificarSuperposicion(int casilla, int jugador)
+    {
+        // Si es la casilla de salida, quizás salir sin hacer nada
+        // o aplicar una lógica especial.
+        if (casilla == 0) // Asume que defines la constante CASILLA_SALIDA
+        {
+            return;
+        }
+
+        string currentPlayer = turnos[jugador];
+        int posActual = jugadores[currentPlayer].Posicion;
+
+        // Fase 1: Ocultar fichas de otros jugadores en la celda "casilla"
+        foreach (KeyValuePair<string, Jugador3D> kvp in jugadores)
+        {
+            if (!kvp.Value.Nombre.Equals(currentPlayer) && kvp.Value.Posicion == casilla)
+            {
+                HacerInvisible(fichas[kvp.Value.Ficha]);
+            }
+        }
+
+        // Fase 2: Volver visible las fichas que se encuentran en la posición actual
+        foreach (KeyValuePair<string, Jugador3D> kvp in jugadores)
+        {
             if (!kvp.Value.Nombre.Equals(currentPlayer) && kvp.Value.Posicion == posActual)
             {
                 HacerVisible(fichas[kvp.Value.Ficha]);
@@ -839,6 +986,7 @@ void Update()
             {
                 if (nuevaFicha != null)
                 {
+                    nuevaFicha.GetComponent<Renderer>().material = ColorElegidoMaterial(ju.Value.ColorIcono);
                     //Tablero 3D
                     Transform textFront = nuevaFicha.transform.Find("NombreFront");
                     Transform textBack = nuevaFicha.transform.Find("NombreBack");
@@ -861,7 +1009,7 @@ void Update()
                     fichas.Add(ju.Value.Ficha + " " + cont, nuevaFicha);
                     ju.Value.Ficha = ju.Value.Ficha + " " + cont;
 
-                    
+
 
                     Transform camaraTransform = nuevaFicha.transform.Find("CameraFicha");
 
@@ -876,7 +1024,7 @@ void Update()
                         //camaraBoton3D.transform.localPosition = new Vector3(25.5f, 24.1f, -23.8f);
                         // Aplicar la rotación correcta a cada ficha
                         Debug.LogError("ju.Value.Nombre: " + ju.Value.Nombre );
-                        Quaternion rotacionFicha = CalcularRotacionFicha(ju.Value.Posicion);
+                        Quaternion rotacionFicha = CalcularRotacionFichaCorrecta(ju.Value.Posicion);
                         nuevaFicha.transform.localRotation = rotacionFicha;
                     }
                    
@@ -890,7 +1038,7 @@ void Update()
     }
 
 
-    Quaternion CalcularRotacionFicha(int posicion)
+    Quaternion CalcularRotacionFicha1(int posicion)
     {
         // Variables para simular el recorrido
         int x = 0, z = 0;         // Posición inicial (esquina inferior izquierda)
@@ -979,6 +1127,375 @@ void Update()
         return currentRot;
     }
 
+    Quaternion CalcularRotacionFicha2(int posicion)
+    {
+        // Variables para simular el recorrido
+        int x = 0, z = 0;         // Posición inicial (esquina inferior izquierda)
+        int dx = 1, dz = 0;       // Movimiento inicial: a la derecha
+
+        // Límites del tablero
+        int left = 0, right = columnas - 1;
+        int top = filas - 1, bottom = 0;
+
+        // Rotación inicial (por ejemplo, -90° en X y 90° en Y)
+        Quaternion currentRot = Quaternion.Euler(-90f, 90f, 0f);
+
+        // Simulamos el recorrido desde la casilla 0 hasta la anterior a la posición deseada.
+        for (int i = 0; i < posicion; i++)
+        {
+            // Si el recorrido llega a una esquina, actualizamos la rotación de forma inmediata.
+            if (tableroEsquina.Contains(i))
+            {
+                if (dx == 1 && dz == 0)
+                {
+                    // Movimiento a la derecha, giro hacia ARRIBA
+                    currentRot = Quaternion.Euler(-90f, 0f, 0f);
+                }
+                else if (dx == 0 && dz == 1)
+                {
+                    // Movimiento hacia arriba, giro hacia IZQUIERDA
+                    currentRot = Quaternion.Euler(-90f, -90f, 0f);
+                }
+                else if (dx == -1 && dz == 0)
+                {
+                    // Movimiento a la izquierda, giro hacia ABAJO
+                    currentRot = Quaternion.Euler(-90f, 180f, 0f);
+                }
+                else if (dx == 0 && dz == -1)
+                {
+                    // Movimiento hacia abajo, giro hacia DERECHA
+                    currentRot = Quaternion.Euler(-90f, 90f, 0f);
+                }
+                Debug.Log($"[Esquina] En casilla {i} se actualiza la rotación a: {currentRot.eulerAngles}");
+            }
+
+            // Avanzamos la posición
+            x += dx;
+            z += dz;
+
+            // Actualizamos dirección en función de los límites
+            if (dx == 1 && x >= right)
+            {
+                dx = 0; dz = 1;  // Giro hacia arriba
+                right--;
+            }
+            else if (dz == 1 && z >= top)
+            {
+                dx = -1; dz = 0; // Giro hacia la izquierda
+                top--;
+            }
+            else if (dx == -1 && x <= left)
+            {
+                dx = 0; dz = -1; // Giro hacia abajo
+                left++;
+            }
+            else if (dz == -1 && z <= bottom)
+            {
+                dx = 1; dz = 0;  // Giro hacia la derecha
+                bottom++;
+            }
+        }
+
+        // Si la casilla destino es una esquina, forzamos la rotación según la dirección.
+        if (tableroEsquina.Contains(posicion))
+        {
+            if (dx == 1 && dz == 0)
+                currentRot = Quaternion.Euler(-90f, 0f, 0f);
+            else if (dx == 0 && dz == 1)
+                currentRot = Quaternion.Euler(-90f, -90f, 0f);
+            else if (dx == -1 && dz == 0)
+                currentRot = Quaternion.Euler(-90f, 180f, 0f);
+            else if (dx == 0 && dz == -1)
+                currentRot = Quaternion.Euler(-90f, 90f, 0f);
+            Debug.Log($"[Esquina destino] En la casilla {posicion} se fuerza la actualización de la rotación a: {currentRot.eulerAngles}");
+        }
+
+        // Aquí es donde forzamos que la componente Z de la rotación sea 0.
+        Vector3 finalEuler = currentRot.eulerAngles;
+        finalEuler.z = 0f; // Forzamos a 0 para obtener -90, 0, 0
+        currentRot = Quaternion.Euler(finalEuler);
+
+        Debug.Log("Rotación final calculada: " + currentRot.eulerAngles);
+        return currentRot;
+    }
+
+    Quaternion CalcularRotacionFicha3(int posicion)
+    {
+        // Variables para simular el recorrido del tablero.
+        int x = 0, z = 0;         // Posición inicial (por ejemplo, esquina inferior izquierda).
+        int dx = 1, dz = 0;       // Movimiento inicial: hacia la derecha.
+
+        // Límites del tablero.
+        int left = 0, right = columnas - 1;
+        int top = filas - 1, bottom = 0;
+
+        // Rotación inicial definida de forma "preestablecida".
+        Quaternion currentRot = Quaternion.Euler(-90f, 90f, 0f);
+
+        // Simulamos el recorrido de la casilla 0 a la casilla anterior a 'posicion'.
+        for (int i = 0; i < posicion; i++)
+        {
+            // Si llegamos a una esquina, actualizamos la rotación según la dirección actual.
+            if (tableroEsquina.Contains(i))
+            {
+                if (dx == 1 && dz == 0)
+                {
+                    // Movimiento a la derecha, se gira hacia ARRIBA.
+                    currentRot = Quaternion.Euler(-90f, 0f, 0f);
+                }
+                else if (dx == 0 && dz == 1)
+                {
+                    // Movimiento hacia arriba, giro hacia IZQUIERDA.
+                    currentRot = Quaternion.Euler(-90f, -90f, 0f);
+                }
+                else if (dx == -1 && dz == 0)
+                {
+                    // Movimiento a la izquierda, giro hacia ABAJO.
+                    currentRot = Quaternion.Euler(-90f, 180f, 0f);
+                }
+                else if (dx == 0 && dz == -1)
+                {
+                    // Movimiento hacia abajo, giro hacia DERECHA.
+                    currentRot = Quaternion.Euler(-90f, 90f, 0f);
+                }
+                Debug.Log($"[Esquina] En casilla {i} se actualiza la rotación a: {currentRot.eulerAngles}");
+            }
+
+            // Avanzamos en el recorrido.
+            x += dx;
+            z += dz;
+
+            // Actualizamos la dirección (dx, dz) según los límites del tablero.
+            if (dx == 1 && x >= right)
+            {
+                dx = 0; dz = 1;  // Giro hacia arriba.
+                right--;
+            }
+            else if (dz == 1 && z >= top)
+            {
+                dx = -1; dz = 0; // Giro hacia la izquierda.
+                top--;
+            }
+            else if (dx == -1 && x <= left)
+            {
+                dx = 0; dz = -1; // Giro hacia abajo.
+                left++;
+            }
+            else if (dz == -1 && z <= bottom)
+            {
+                dx = 1; dz = 0;  // Giro hacia la derecha.
+                bottom++;
+            }
+        }
+
+        // Si la casilla 'posicion' es una esquina, se fuerza la rotación final de forma similar.
+        if (tableroEsquina.Contains(posicion))
+        {
+            if (dx == 1 && dz == 0)
+                currentRot = Quaternion.Euler(-90f, 0f, 0f);
+            else if (dx == 0 && dz == 1)
+                currentRot = Quaternion.Euler(-90f, -90f, 0f);
+            else if (dx == -1 && dz == 0)
+                currentRot = Quaternion.Euler(-90f, 180f, 0f);
+            else if (dx == 0 && dz == -1)
+                currentRot = Quaternion.Euler(-90f, 90f, 0f);
+            Debug.Log($"[Esquina destino] En la casilla {posicion} se fuerza la rotación a: {currentRot.eulerAngles}");
+        }
+
+        // Aquí forzamos la componente Z a cero.
+        Vector3 finalEuler = currentRot.eulerAngles;
+        finalEuler.z = 0f; // Forzamos Z = 0 para obtener -90, 0, 0.
+        currentRot = Quaternion.Euler(finalEuler);
+
+        Debug.Log("Rotación final calculada: " + currentRot.eulerAngles);
+        return currentRot;
+    }
+
+    public Quaternion CalcularRotacionFicha4(int posicion)
+    {
+        // Variables para simular el recorrido (posición inicial en la esquina inferior izquierda)
+        int x = 0, z = 0;
+        int dx = 1, dz = 0; // Movimiento inicial: a la derecha
+
+        // Límites del tablero
+        int left = 0, right = columnas - 1;
+        int top = filas - 1, bottom = 0;
+
+        // Rotación inicial preestablecida (por ejemplo, -90° en X y 90° en Y)
+        Quaternion currentRot = Quaternion.Euler(-90f, 90f, 0f);
+
+        // Recorremos desde la casilla 0 hasta la anterior a 'posicion'
+        for (int i = 0; i < posicion; i++)
+        {
+            // Si llegamos a una esquina, actualizamos la rotación inmediatamente
+            if (tableroEsquina.Contains(i))
+            {
+                if (dx == 1 && dz == 0)
+                    currentRot = Quaternion.Euler(-90f, 0f, 0f);     // Giro: derecha -> arriba
+                else if (dx == 0 && dz == 1)
+                    currentRot = Quaternion.Euler(-90f, -90f, 0f);   // Giro: arriba -> izquierda
+                else if (dx == -1 && dz == 0)
+                    currentRot = Quaternion.Euler(-90f, 180f, 0f);   // Giro: izquierda -> abajo
+                else if (dx == 0 && dz == -1)
+                    currentRot = Quaternion.Euler(-90f, 90f, 0f);    // Giro: abajo -> derecha
+
+                Debug.Log($"[Esquina] En casilla {i} se actualiza la rotación a: {currentRot.eulerAngles}");
+            }
+
+            // Avanzamos la posición en el recorrido
+            x += dx;
+            z += dz;
+
+            // Actualizamos la dirección según los límites del tablero
+            if (dx == 1 && x >= right)
+            {
+                dx = 0; dz = 1;  // Giro hacia arriba
+                right--;
+            }
+            else if (dz == 1 && z >= top)
+            {
+                dx = -1; dz = 0; // Giro hacia la izquierda
+                top--;
+            }
+            else if (dx == -1 && x <= left)
+            {
+                dx = 0; dz = -1; // Giro hacia abajo
+                left++;
+            }
+            else if (dz == -1 && z <= bottom)
+            {
+                dx = 1; dz = 0;  // Giro hacia la derecha
+                bottom++;
+            }
+        }
+
+        // Si la casilla destino es una esquina, forzamos la rotación según la dirección actual
+        if (tableroEsquina.Contains(posicion))
+        {
+            if (dx == 1 && dz == 0)
+                currentRot = Quaternion.Euler(-90f, 0f, 0f);
+            else if (dx == 0 && dz == 1)
+                currentRot = Quaternion.Euler(-90f, -90f, 0f);
+            else if (dx == -1 && dz == 0)
+                currentRot = Quaternion.Euler(-90f, 180f, 0f);
+            else if (dx == 0 && dz == -1)
+                currentRot = Quaternion.Euler(-90f, 90f, 0f);
+
+            Debug.Log($"[Esquina destino] En la casilla {posicion} se fuerza la rotación a: {currentRot.eulerAngles}");
+        }
+
+        // Forzamos definitivamente la rotación final según la dirección final (dx, dz)
+        // Esto se aplica siempre para ignorar la componente Z que puede venir alterada en la conversión.
+        if (dx == 1 && dz == 0)
+        {
+            currentRot = Quaternion.Euler(-90f, 0f, 0f);
+        }
+        else if (dx == 0 && dz == 1)
+        {
+            currentRot = Quaternion.Euler(-90f, -90f, 0f);
+        }
+        else if (dx == -1 && dz == 0)
+        {
+            currentRot = Quaternion.Euler(-90f, 180f, 0f);
+        }
+        else if (dx == 0 && dz == -1)
+        {
+            currentRot = Quaternion.Euler(-90f, 90f, 0f);
+        }
+
+        Debug.Log("Forzado: Rotación final calculada: " + currentRot.eulerAngles);
+        return currentRot;
+    }
+
+    public Quaternion CalcularRotacionFichaSimple(int posicion)
+    {
+        // Suponiendo que el recorrido del tablero se hace en 4 lados:
+        int ladoHorizontal = columnas - 1;
+        int ladoVertical = filas - 1;
+
+        // El perímetro (sin contar el inicio duplicado) es:
+        int perimetro = 2 * (ladoHorizontal + ladoVertical);
+
+        // Usamos el módulo para “normalizar” la posición a lo largo del perímetro.
+        int posModulo = posicion % perimetro;
+
+        // Si la ficha se encuentra en el primer segmento: hacia la derecha (fila inferior)
+        if (posModulo < ladoHorizontal)
+        {
+            // Movimiento a la derecha -> rotación deseada: -90, 0, 0
+            return Quaternion.Euler(-90f, 0f, 0f);
+        }
+        // Segundo segmento: subiendo en el lado derecho
+        else if (posModulo < (ladoHorizontal + ladoVertical))
+        {
+            return Quaternion.Euler(-90f, -90f, 0f);
+        }
+        // Tercer segmento: de derecha a izquierda en la parte superior
+        else if (posModulo < (2 * ladoHorizontal + ladoVertical))
+        {
+            return Quaternion.Euler(-90f, 180f, 0f);
+        }
+        // Cuarto segmento: bajando en el lado izquierdo
+        else
+        {
+            return Quaternion.Euler(-90f, 90f, 0f);
+        }
+    }
+
+    public Quaternion CalcularRotacionFichaCorrecta(int posicion)
+    {
+        if (!posicionesTablero.ContainsKey(posicion))
+        {
+            Debug.LogWarning("La casilla " + posicion + " no está en posicionesTablero.");
+            return Quaternion.identity;
+        }
+
+        Vector3 posCelda = posicionesTablero[posicion];
+
+        // Determina los límites del tablero
+        float minX = float.MaxValue, maxX = float.MinValue;
+        float minZ = float.MaxValue, maxZ = float.MinValue;
+
+        foreach (Vector3 pos in posicionesTablero.Values)
+        {
+            if (pos.x < minX) minX = pos.x;
+            if (pos.x > maxX) maxX = pos.x;
+            if (pos.z < minZ) minZ = pos.z;
+            if (pos.z > maxZ) maxZ = pos.z;
+        }
+
+        float tol = 0.1f; // Tolerancia para definir el borde
+        Quaternion resultado;
+
+        if (Mathf.Abs(posCelda.x - maxX) < tol)
+        {
+            Debug.Log($"Casilla {posicion} (pos: {posCelda}) en el borde derecho.");
+            resultado = Quaternion.Euler(-90f, 0f, 0f);
+        }
+        else if (Mathf.Abs(posCelda.z - maxZ) < tol)
+        {
+            Debug.Log($"Casilla {posicion} (pos: {posCelda}) en el borde superior.");
+            resultado = Quaternion.Euler(-90f, -90f, 0f);
+        }
+        else if (Mathf.Abs(posCelda.x - minX) < tol)
+        {
+            Debug.Log($"Casilla {posicion} (pos: {posCelda}) en el borde izquierdo.");
+            resultado = Quaternion.Euler(-90f, 180f, 0f);
+        }
+        else if (Mathf.Abs(posCelda.z - minZ) < tol)
+        {
+            Debug.Log($"Casilla {posicion} (pos: {posCelda}) en el borde inferior.");
+            resultado = Quaternion.Euler(-90f, 90f, 0f);
+        }
+        else
+        {
+            Debug.LogWarning($"Casilla {posicion} (pos: {posCelda}) no se encuentra en ningún borde claramente. Se asigna rotación por defecto.");
+            resultado = Quaternion.Euler(-90f, 0f, 0f);
+        }
+
+        Debug.Log("Rotación asignada: " + resultado.eulerAngles);
+        return resultado;
+    }
     //Dado----------------------------------------------------------------------------
     public void tirarDado() {
         if (!block)
@@ -1200,7 +1717,29 @@ void Update()
         MostrarCarta(RamdomMinijuego());
     }
 
-    IEnumerator MoverFichaPasoAPaso(int jugador, int resultadoDado)
+    void ActualizarVisibilidad(int casilla, int jugador)
+    {
+        string currentPlayer = turnos[jugador];
+
+        foreach (KeyValuePair<string, Jugador3D> kvp in jugadores)
+        {
+            if (kvp.Value.Posicion == casilla)
+            {
+                // Si es el jugador que se mueve, se muestra; de lo contrario se oculta.
+                if (kvp.Value.Nombre.Equals(currentPlayer))
+                {
+                    HacerVisible(fichas[kvp.Value.Ficha]);
+                }
+                else
+                {
+                    HacerInvisible(fichas[kvp.Value.Ficha]);
+                }
+            }
+        }
+    }
+
+
+    IEnumerator MoverFichaPasoAPaso3(int jugador, int resultadoDado)
     {
         int nuevaPosicion = jugadores[turnos[jugador]].Posicion + resultadoDado;
 
@@ -1211,7 +1750,7 @@ void Update()
                 int siguienteCasilla = jugadores[turnos[jugador]].Posicion + 1;
 
                 // Usamos el mismo 'jugador' para ambas llamadas a VerificarSuperposicion:
-                //VerificarSuperposicion(siguienteCasilla, jugador);
+                VerificarSuperposicion(siguienteCasilla, jugador);
 
                 if (!posicionesTablero.ContainsKey(siguienteCasilla))
                     break;
@@ -1234,7 +1773,7 @@ void Update()
                 jugadores[turnos[jugador]].Posicion++;
 
                 // Verificamos nuevamente con la posición ya actualizada del mismo jugador
-               // VerificarSuperposicion(jugadores[turnos[jugador]].Posicion, jugador);
+                VerificarSuperposicion(jugadores[turnos[jugador]].Posicion, jugador);
 
                 yield return new WaitForSeconds(pausaEntreCasillas);
 
@@ -1254,6 +1793,115 @@ void Update()
 
         MostrarCarta(RamdomMinijuego());
     }
+
+    public IEnumerator MoverFichaPasoAPaso6(int jugador, int resultadoDado)
+    {
+        // Calcula la nueva posición final (asumiendo que existe en 'posicionesTablero')
+        int nuevaPosicion = jugadores[turnos[jugador]].Posicion + resultadoDado;
+        if (!posicionesTablero.ContainsKey(nuevaPosicion))
+            yield break;
+
+        // Mientras el jugador no alcance la nueva posición, movemos la ficha por paso.
+        while (jugadores[turnos[jugador]].Posicion < nuevaPosicion)
+        {
+            int siguienteCasilla = jugadores[turnos[jugador]].Posicion + 1;
+
+            // Antes de mover, actualizamos la visibilidad en la siguiente casilla. 
+            // Esto solo afecta la forma en que se muestran las demás fichas y no bloquea el movimiento.
+            ActualizarVisibilidad(siguienteCasilla, jugador);
+
+            // Verificamos que la casilla destino exista
+            if (!posicionesTablero.ContainsKey(siguienteCasilla))
+                break;
+
+            Vector3 posicionInicial = casillas.transform.TransformPoint(posicionesTablero[jugadores[turnos[jugador]].Posicion]);
+            Vector3 posicionDestino = casillas.transform.TransformPoint(posicionesTablero[siguienteCasilla]);
+
+            // Interpolación del movimiento con un efecto de "salto"
+            float t = 0f;
+            while (t < 1f)
+            {
+                t += Time.deltaTime * velocidadMovimiento;
+                float salto = Mathf.Sin(t * Mathf.PI) * alturaSalto;
+                fichas[jugadores[turnos[jugador]].Ficha].transform.position =
+                    Vector3.Lerp(posicionInicial, posicionDestino, t) + Vector3.up * salto;
+                yield return null;
+            }
+
+            // Actualiza la posición del jugador una vez completado el movimiento
+            jugadores[turnos[jugador]].Posicion++;
+
+            // Actualizamos nuevamente la visibilidad usando la nueva posición 
+            ActualizarVisibilidad(jugadores[turnos[jugador]].Posicion, jugador);
+
+            yield return new WaitForSeconds(pausaEntreCasillas);
+
+            // Si la posición actual es una casilla donde se rota la cámara, se hace la rotación
+            if (tableroEsquina.Contains(jugadores[turnos[jugador]].Posicion))
+            {
+                StartCoroutine(RotarCamaraSuavemente(90)); // Ejemplo: giro de 90°
+            }
+        }
+
+        // Al finalizar el movimiento:
+        MostrarPopupGanador();
+        jugadorActual = siguienteJugador(jugador);
+        MoverFicha2DAlFinal(fichas2D[turnos[jugadorActual]]);
+        MoverFicha2DAlFinal(fichasBTN2D[turnos[jugadorActual]]);
+        MarcoJugador();
+        MostrarCarta(RamdomMinijuego());
+    }
+
+    IEnumerator MoverFichaPasoAPaso(int jugador, int resultadoDado)
+    {
+        int nuevaPosicion = jugadores[turnos[jugador]].Posicion + resultadoDado;
+        if (!posicionesTablero.ContainsKey(nuevaPosicion))
+            yield break;
+
+        while (jugadores[turnos[jugador]].Posicion < nuevaPosicion)
+        {
+            int siguienteCasilla = jugadores[turnos[jugador]].Posicion + 1;
+            if (!posicionesTablero.ContainsKey(siguienteCasilla))
+                break;
+
+            Vector3 posicionInicial = casillas.transform.TransformPoint(posicionesTablero[jugadores[turnos[jugador]].Posicion]);
+            Vector3 posicionDestino = casillas.transform.TransformPoint(posicionesTablero[siguienteCasilla]);
+
+            float t = 0f;
+            while (t < 1f)
+            {
+                t += Time.deltaTime * velocidadMovimiento;
+                float salto = Mathf.Sin(t * Mathf.PI) * alturaSalto;
+                fichas[jugadores[turnos[jugador]].Ficha].transform.position =
+                    Vector3.Lerp(posicionInicial, posicionDestino, t) + Vector3.up * salto;
+                yield return null;
+            }
+
+            // Una vez completado el movimiento entre casillas, incrementamos la posición.
+            jugadores[turnos[jugador]].Posicion++;
+
+            // Ahora actualizamos la visibilidad en la nueva casilla alcanzada:
+            ActualizarVisibilidadCeldaPorTurno(jugadores[turnos[jugador]].Posicion, jugador);
+
+            yield return new WaitForSeconds(pausaEntreCasillas);
+
+            // Si la casilla es parte de las esquinas para la cámara, se ejecuta la rotación.
+            if (tableroEsquina.Contains(jugadores[turnos[jugador]].Posicion))
+                StartCoroutine(RotarCamaraSuavemente(-90f));  // Ajusta el ángulo según tu juego.
+        }
+
+        // Al finalizar el movimiento por este turno, se realizan otras actualizaciones:
+        MostrarPopupGanador();
+        jugadorActual = siguienteJugador(jugador);
+        MoverFicha2DAlFinal(fichas2D[turnos[jugadorActual]]);
+        MoverFicha2DAlFinal(fichasBTN2D[turnos[jugadorActual]]);
+        MarcoJugador();
+        MostrarCarta(RamdomMinijuego());
+    }
+
+
+
+
 
     IEnumerator RotarCamaraSuavemente(float anguloRot)
     {
@@ -1280,9 +1928,9 @@ void Update()
 
     //Ficha tablero 2D
 
-    void AñadirFicha2D()
+    void AñadirFicha2D1()
     {
-
+        
         foreach (Jugador ju in jugBBDD)
         {
             ColorUtility.TryParseHtmlString(ju.ColorIcono, out Color color);
@@ -1335,8 +1983,70 @@ void Update()
                }));
 
         }
+        
 
 
+    }
+
+    void AñadirFicha2D()
+    {
+        foreach (Jugador ju in jugBBDD)
+        {
+            ColorUtility.TryParseHtmlString(ju.ColorIcono, out Color color);
+
+            // --- Tablero 2D, instanciación de ficha ---
+            GameObject fichaPrefab2D = Instantiate(prefabsFicha2D);
+
+            Image ColorBoton2D = fichaPrefab2D.GetComponentInChildren<Image>();
+            ColorUtility.TryParseHtmlString(ju.ColorIcono, out Color color2D);
+            ColorBoton2D.color = color;
+
+            Image ImagenIcono2D = fichaPrefab2D.transform.Find("ImageJugador").GetComponentInChildren<Image>();
+            CambiarImagenJugador(ImagenIcono2D.gameObject, ju.RutaImagen);
+
+            fichaPrefab2D.transform.SetParent(contenedorFichas2D.transform, false);
+            fichas2D.Add(ju.Nombre, fichaPrefab2D);
+
+            // --- Botón Tablero 2D, instanciación de ficha botón ---
+            GameObject fichaBTNCasilla2D = Instantiate(prefabsBotonFicha2D);
+
+            Image ColorBotonBTN2D = fichaBTNCasilla2D.GetComponentInChildren<Image>();
+            ColorBotonBTN2D.color = color;
+
+            Image ImagenBTNIcono2D = fichaBTNCasilla2D.transform.Find("ImageJugador").GetComponentInChildren<Image>();
+            CambiarImagenJugador(ImagenBTNIcono2D.gameObject, ju.RutaImagen);
+
+            fichaBTNCasilla2D.transform.SetParent(contenedorBotonFichas2D.transform, false);
+            fichasBTN2D.Add(ju.Nombre, fichaBTNCasilla2D);
+
+            // Inicialmente desactivamos para que no se muestren en posición por defecto.
+            fichaPrefab2D.SetActive(false);
+            fichaBTNCasilla2D.SetActive(false);
+
+            // Forzamos la actualización del canvas para que los layouts se configuren de inmediato.
+            Canvas.ForceUpdateCanvases();
+
+            // Usamos el Coroutine para obtener las posiciones de la casilla de forma asíncrona.
+            StartCoroutine(ObtenerPosicionCasilla(
+                casillas2D[CalcularPosicionEnGrid(ju.Posicion)],
+                botonCasillas2D[CalcularPosicionEnGrid(ju.Posicion)],
+                (posicion, posicion2) =>
+                {
+                    // Asignamos las posiciones calculadas a los RectTransform de cada ficha.
+                    fichaPrefab2D.GetComponent<RectTransform>().anchoredPosition = posicion;
+                    fichaBTNCasilla2D.GetComponent<RectTransform>().anchoredPosition = posicion2;
+
+                    // Forzamos la reconstrucción inmediata del layout de los contenedores.
+                    LayoutRebuilder.ForceRebuildLayoutImmediate(contenedorFichas2D.GetComponent<RectTransform>());
+                    LayoutRebuilder.ForceRebuildLayoutImmediate(contenedorBotonFichas2D.GetComponent<RectTransform>());
+
+                    // Activamos las fichas ya posicionadas.
+                    fichaPrefab2D.SetActive(true);
+                    fichaBTNCasilla2D.SetActive(true);
+                }
+            ));
+            popupTablero2D.SetActive(false);
+        }
     }
 
     IEnumerator ObtenerPosicionCasilla(GameObject casilla, GameObject casillaBoton, System.Action<Vector2, Vector2> callback)
@@ -1965,6 +2675,7 @@ void Update()
             {
                 Jugador3D jugador3D = new Jugador3D(ju.Nombre,ju.ColorIcono, ju.RutaImagen, ju.Ficha, ju.Posicion);
                 jugadores.Add(jugador3D.Nombre, jugador3D);
+                Debug.Log("jugador3D.Nombre: "+ jugador3D.Nombre+ "jugador3D.Posicion: " + jugador3D.Posicion + "jugador3D.RutaImagen: " + jugador3D.RutaIcono+ "jugador3D.ColorIcono: " + jugador3D.ColorIcono);
                 jugadoresIniciales.Add(jugador3D.Nombre, jugador3D);
                 AñadirIcono(ju.Nombre, ju.RutaImagen, ju.ColorIcono,cont);
 
@@ -2232,19 +2943,19 @@ void Update()
         popupPreCarga.gameObject.SetActive(false);
 
         MostrarPopupTurno();
+
     }
     //PopUp Turno
 
     IEnumerator ActivarPopupTurno()
     {
  
-
         if (jugadores[turnos[jugadorActual]].Posicion != (filas * columnas) - 1) {
             ColorUtility.TryParseHtmlString(jugadores[turnos[jugadorActual]].ColorIcono, out Color color2);
 
             popupTurno.transform.Find("Contenedor").GetComponent<Image>().color = color2;
             popupTurno.GetComponentInChildren<TMP_Text>().text = "¡¡Te toca\n" + jugadores[turnos[jugadorActual]].Nombre + "!!";
-
+            VerificarFichasAlIniciarTurno(jugadorActual);
             popupTurno.SetActive(true);
             yield return new WaitForSeconds(2); // Espera 2 segundos
             popupTurno.SetActive(false);
@@ -2419,6 +3130,7 @@ void Update()
                 popupMinijuegos.SetActive(false);
                 block = false;
                 blockBotonVista = false;
+                //VerificarFichasAlIniciarTurno(jugadorActual);
                 MostrarPopupTurno();
             });
         }
