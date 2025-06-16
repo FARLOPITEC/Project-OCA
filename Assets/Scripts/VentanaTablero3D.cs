@@ -22,6 +22,10 @@ using Random = UnityEngine.Random;
 public class VentanaTablero3D : MonoBehaviour
 {
 
+    public GameObject popupSalir;
+    public GameObject fondoDifuminado;
+   
+
     ////Tablero 3D----------------------------------------------------------------
     public GameObject prefabCasNorm;
     public GameObject prefabCasEsq;
@@ -174,6 +178,9 @@ public class VentanaTablero3D : MonoBehaviour
     // Start se ejecuta después de Awake y OnEnable.
     void Start()
     {
+        popupSalir.SetActive(false);
+        fondoDifuminado.SetActive(false);
+
         // Configuración de acuerdo a la escena anterior.
         if (DatosEscena.EscenaAnterior.Equals("MenuUsuarios"))
         {
@@ -3318,6 +3325,37 @@ void Update()
             
         }
     }
+
+ 
+
+
+    public void IrAtras()
+    {
+        SceneManager.LoadScene("MenuTableros");
+    }
+
+
+    public void MostrarPopupSalir()
+    {
+        popupSalir.SetActive(true);
+        fondoDifuminado.SetActive(true);
+    }
+
+   
+    public void CancelarSalida()
+    {
+        popupSalir.SetActive(false);
+        fondoDifuminado.SetActive(false);
+    }
+
+   
+
+    // Este ya lo tenías, lo llama el botón "Salir"
+    /*public void SalirDelJuego()
+   {
+
+       Application.Quit(); // o la lógica que uses
+   } */
 }
 
 

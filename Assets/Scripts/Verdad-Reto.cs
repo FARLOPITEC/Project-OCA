@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using TMPro;
+using UnityEngine.UI;
 
 public class VerdadORetoManager : MonoBehaviour
 {
@@ -21,6 +22,22 @@ public class VerdadORetoManager : MonoBehaviour
     private Vector2 centro = Vector2.zero;
     private Vector2 derecha = new Vector2(2000, 0);
     private Vector2 izquierda = new Vector2(-2000, 0);
+    public GameObject difuminado; // Opcional, para efectos visuales
+
+    //SHADOW PARA LOS BOTONES CUANDO APARECE EL DIFUMINADO
+    [Header("Botón 1")]
+    public Button boton1;
+    public Color32 sombraPersonalizadaColor1 = new Color32(203, 0, 209, 80); // Ejemplo rosa
+
+    [Header("Botón 2")]
+    public Button boton2;
+    public Color32 sombraPersonalizadaColor2 = new Color32(0, 150, 255, 80); // Ejemplo azul
+
+    [Header("Sombra Inicial Común")]
+    public Color32 sombraInicialColor = new Color32(0, 0, 0, 128);
+    public Vector2 sombraInicialDireccion = new Vector2(0f, -10f);
+
+    private Shadow sombraActual;
 
     private bool bloqueado = false;
 
@@ -34,6 +51,9 @@ public class VerdadORetoManager : MonoBehaviour
 
         cartaVerdad.SetActive(false);
         cartaReto.SetActive(false);
+        difuminado.SetActive(false); // Asegurarse de que el difuminado esté desactivado al inicio
+        AplicarSombra(boton1, sombraInicialColor, sombraInicialDireccion);
+        AplicarSombra(boton2, sombraInicialColor, sombraInicialDireccion);
     }
 
     private void CargarCSV(string rutaRecursos, List<string> listaDestino)
@@ -59,12 +79,14 @@ public class VerdadORetoManager : MonoBehaviour
     {
         if (bloqueado || preguntasVerdad.Count == 0) return;
         StartCoroutine(AnimarCarta("verdad"));
+        StartCoroutine(Difuminado());
     }
 
     public void MostrarReto()
     {
         if (bloqueado || preguntasReto.Count == 0) return;
         StartCoroutine(AnimarCarta("reto"));
+        StartCoroutine(Difuminado());
     }
 
     private IEnumerator AnimarCarta(string tipo)
@@ -131,4 +153,37 @@ public class VerdadORetoManager : MonoBehaviour
         yield return new WaitForSeconds(1f);
         bloqueado = false;
     }
+    private IEnumerator Difuminado()
+    {
+        yield return new WaitForSeconds(0.25f);
+        difuminado.SetActive(true);
+    }
+
+    private void AplicarSombra(Button boton, Color32 color, Vector2 direccion)
+    {
+        if (boton == null) return;
+
+        Shadow sombra = boton.GetComponent<Shadow>();
+        if (sombra == null)
+            sombra = boton.gameObject.AddComponent<Shadow>();
+
+        sombra.effectColor = color;
+        sombra.effectDistance = direccion;
+    }
+
+    // Llamar cuando aparezca el difuminado (por ejemplo al abrir una ventana o popup)
+    public void AplicarSombrasPersonalizadas()
+    {
+        AplicarSombra(boton1, sombraPersonalizadaColor1, sombraInicialDireccion);
+        AplicarSombra(boton2, sombraPersonalizadaColor2, sombraInicialDireccion);
+    }
+
+    // Llamar cuando se cierre el difuminado (para restaurar sombra inicial)
+    public void RestaurarSombrasIniciales()
+    {
+        AplicarSombra(boton1, sombraInicialColor, sombraInicialDireccion);
+        AplicarSombra(boton2, sombraInicialColor, sombraInicialDireccion);
+    }
+
+
 }

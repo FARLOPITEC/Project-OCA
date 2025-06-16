@@ -10,6 +10,10 @@ public class GeneradorRuleta : MonoBehaviour
     public RectTransform ruletaTransform;
     public GameObject sectorPrefab;
     public RectTransform contenedorCartas;
+    private Coroutine corutinaDifuminado;
+
+    [Header("Difuminado al mostrar carta")]
+    public GameObject difuminado;
 
     public float duracionGiro = 3f;
 
@@ -20,6 +24,7 @@ public class GeneradorRuleta : MonoBehaviour
     void Start()
     {
         CrearRuleta();
+        difuminado.SetActive(false); // Asegurarse de que el difuminado esté desactivado al inicio
     }
 
     public void CrearRuleta()
@@ -50,7 +55,20 @@ public class GeneradorRuleta : MonoBehaviour
 
     public void GirarBotella()
     {
+        
         if (girando) return;
+
+        // Apagar difuminado justo al comenzar el giro (antes de animar la carta fuera)
+        if (difuminado.activeSelf)
+        {
+            if (corutinaDifuminado != null)
+            {
+                StopCoroutine(corutinaDifuminado);
+                corutinaDifuminado = null;
+            }
+            StartCoroutine(DesactivarDifuminadoConDelay());
+        }
+
 
         if (cartaActiva != null)
         {
@@ -62,6 +80,7 @@ public class GeneradorRuleta : MonoBehaviour
                     Destroy(cartaActiva);
                     cartaActiva = null;
                     StartCoroutine(Girar());
+                    
                 });
                 return;
             }
@@ -110,6 +129,17 @@ public class GeneradorRuleta : MonoBehaviour
 
     private void MostrarCarta(int index)
     {
+       
+
+        //Destruir carta anterior si existe
+        if (cartaActiva != null)
+        {
+            Destroy(cartaActiva);
+            cartaActiva = null;
+        }
+
+
+
         foreach (Transform child in contenedorCartas)
             Destroy(child.gameObject);
 
@@ -127,6 +157,8 @@ public class GeneradorRuleta : MonoBehaviour
             rect.localScale = Vector3.one;
 
             LeanTween.moveX(rect, 0f, 0.5f).setEaseOutExpo();
+
+            MostrarConDelay();
         }
 
         if (data.archivoCSV != null)
@@ -150,6 +182,13 @@ public class GeneradorRuleta : MonoBehaviour
                 {
                     LeanTween.moveX(r, Screen.width, 0.4f).setEaseInExpo().setOnComplete(() =>
                     {
+                        if (corutinaDifuminado != null)
+                        {
+                            StopCoroutine(corutinaDifuminado);
+                            corutinaDifuminado = null;
+                        }
+                        StartCoroutine(DesactivarDifuminadoConDelay());
+
                         Destroy(cartaActiva);
                         cartaActiva = null;
                     });
@@ -157,4 +196,28 @@ public class GeneradorRuleta : MonoBehaviour
             });
         }
     }
+
+    public void MostrarConDelay()
+    {
+        if (corutinaDifuminado != null)
+        {
+            StopCoroutine(corutinaDifuminado);
+            corutinaDifuminado = null;
+        }
+
+        corutinaDifuminado = StartCoroutine(MostrarDespuesDeDelay());
+    }
+
+    IEnumerator MostrarDespuesDeDelay()
+    {
+        yield return new WaitForSeconds(0.1f);  // Puedes ajustar el delay si quieres
+        difuminado.SetActive(true);
+    }
+
+    IEnumerator DesactivarDifuminadoConDelay()
+    {
+        yield return new WaitForSeconds(0.2f);
+        difuminado.SetActive(false);
+    }
+
 }
