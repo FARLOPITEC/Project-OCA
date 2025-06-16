@@ -438,7 +438,7 @@ void Update()
     //Icono Turno-----------------------------------------------------------------------------------------------
     void AñadirIcono(string nombre, string ruta,string hex,int cont)
     {
-        GameObject iconoPrefab = Resources.Load<GameObject>("Prefabs/Escena Jugadores/MarcoIcono1");
+        GameObject iconoPrefab = Resources.Load<GameObject>("Fichas/MarcoIcono1");
 
         GameObject icono = Instantiate(iconoPrefab, Vector3.zero, Quaternion.identity);
 
@@ -3181,11 +3181,11 @@ void Update()
         else if (configMinijuegos[0].tamaño.Contains("pequeño")) { filas = 7; columnas = 7; Debug.Log("TogglePequeño"); }
 
 
-        if (configMinijuegos[0].tablero.ToUpper().Equals("CLASICO")) numeroTablero = 0;
-            else if (configMinijuegos[0].tablero.ToUpper().Equals("ETILICO")) numeroTablero = 1;
-            else if (configMinijuegos[0].tablero.ToUpper().Equals("HOT")) numeroTablero = 2;
-            else if (configMinijuegos[0].tablero.ToUpper().Equals("PAREJA")) numeroTablero = 3;
-            else if (configMinijuegos[0].tablero.ToUpper().Equals("GIGANTE")) numeroTablero = 4;
+        if (configMinijuegos[0].tablero.ToUpper().Equals("BUTTONCLASICO")) numeroTablero = 0;
+            else if (configMinijuegos[0].tablero.ToUpper().Equals("BUTTONETILICO")) numeroTablero = 1;
+            else if (configMinijuegos[0].tablero.ToUpper().Equals("BUTTONHOT")) numeroTablero = 2;
+            else if (configMinijuegos[0].tablero.ToUpper().Equals("BUTTONPAREJA")) numeroTablero = 3;
+            else if (configMinijuegos[0].tablero.ToUpper().Equals("BUTTONGIGANTE")) numeroTablero = 4;
 
         if (configMinijuegos[0].continuarPartida.Equals("S")) {
             hayPartida = true;
