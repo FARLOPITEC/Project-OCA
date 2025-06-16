@@ -678,6 +678,16 @@ public class ManagerJugadores : MonoBehaviour
         popupContinuarPartida.gameObject.SetActive(false); 
     }
 
+    // Cuando estemos en pruebas tenerlo pero cuando estemos en android
+    void OnDestroy()
+    {
+        if (ClaseManagerBBDD.Instance != null)
+        {
+            ClaseManagerBBDD.Instance.CloseDatabase();
+
+        }
+    }
+
 
 
 }

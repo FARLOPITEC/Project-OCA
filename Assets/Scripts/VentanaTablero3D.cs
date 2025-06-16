@@ -438,7 +438,7 @@ void Update()
     //Icono Turno-----------------------------------------------------------------------------------------------
     void AñadirIcono(string nombre, string ruta,string hex,int cont)
     {
-        GameObject iconoPrefab = Resources.Load<GameObject>("Prefabs/Escena Jugadores/MarcoIcono");
+        GameObject iconoPrefab = Resources.Load<GameObject>("Prefabs/Escena Jugadores/MarcoIcono1");
 
         GameObject icono = Instantiate(iconoPrefab, Vector3.zero, Quaternion.identity);
 
@@ -3317,6 +3317,7 @@ void Update()
 
     }
 
+    // Cuando estemos en pruebas tenerlo pero cuando estemos en android en la version final eliminar
     void OnDestroy()
     {
         if (ClaseManagerBBDD.Instance != null)
