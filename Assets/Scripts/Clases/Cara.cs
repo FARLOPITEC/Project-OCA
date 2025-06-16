@@ -38,7 +38,7 @@ public class Cara : MonoBehaviour
         }
     }
 
-    void OnTriggerExit(Collider col)
+    void OnEnable()
     {
         TocaSuelo = false;
     }
