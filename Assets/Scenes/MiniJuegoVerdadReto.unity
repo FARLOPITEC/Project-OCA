@@ -425,8 +425,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: fe87c0e1cc204ed48ad3b37840f39efc, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  m_Material: {fileID: 1163537150}
-  m_Color: {r: 0.17254902, g: 0, b: 0.9960785, a: 1}
+  m_Material: {fileID: 239648460}
+  m_Color: {r: 0.17254902, g: 0.35686275, b: 0.52156866, a: 1}
   m_RaycastTarget: 1
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
@@ -719,6 +719,46 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 174623193}
   m_CullTransparentMesh: 1
+--- !u!21 &239648460
+Material:
+  serializedVersion: 8
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_Name: UI/RoundedCorners/RoundedCorners
+  m_Shader: {fileID: 4800000, guid: 0bd2ec5d73751e34a814274a454bec41, type: 3}
+  m_Parent: {fileID: 0}
+  m_ModifiedSerializedProperties: 0
+  m_ValidKeywords: []
+  m_InvalidKeywords: []
+  m_LightmapFlags: 4
+  m_EnableInstancingVariants: 0
+  m_DoubleSidedGI: 0
+  m_CustomRenderQueue: -1
+  stringTagMap: {}
+  disabledShaderPasses: []
+  m_LockedProperties: 
+  m_SavedProperties:
+    serializedVersion: 3
+    m_TexEnvs:
+    - _MainTex:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    m_Ints: []
+    m_Floats:
+    - _ColorMask: 15
+    - _Stencil: 0
+    - _StencilComp: 8
+    - _StencilOp: 0
+    - _StencilReadMask: 255
+    - _StencilWriteMask: 255
+    - _UseUIAlphaClip: 0
+    m_Colors:
+    - _OuterUV: {r: 0, g: 0, b: 1, a: 1}
+    - _WidthHeightRadius: {r: 400, g: 150, b: 80, a: 0}
+  m_BuildTextureStacks: []
 --- !u!1 &267672132
 GameObject:
   m_ObjectHideFlags: 0
@@ -1085,6 +1125,12 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 80419177}
     m_Modifications:
+    - target: {fileID: 556182360285101112, guid: 1f4e48ed8f33cfc40b9a792b0cc695a5,
+        type: 3}
+      propertyPath: m_Sprite
+      value: 
+      objectReference: {fileID: 21300000, guid: 82e825497ab703e409f3d0fa38303fe7,
+        type: 3}
     - target: {fileID: 2955399120571114009, guid: 1f4e48ed8f33cfc40b9a792b0cc695a5,
         type: 3}
       propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_Target
@@ -1408,6 +1454,12 @@ PrefabInstance:
       propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_MethodName
       value: OcultarPopupDerecha
       objectReference: {fileID: 0}
+    - target: {fileID: 2865102622873354301, guid: 5b4620e48f769cd45815c122b872c6fe,
+        type: 3}
+      propertyPath: m_Sprite
+      value: 
+      objectReference: {fileID: 21300000, guid: ba6b83920bc5ea64a8db8d223cef1fa7,
+        type: 3}
     - target: {fileID: 5116551935374634815, guid: 5b4620e48f769cd45815c122b872c6fe,
         type: 3}
       propertyPath: m_IsActive
@@ -1552,46 +1604,6 @@ GameObject:
     type: 3}
   m_PrefabInstance: {fileID: 662236279}
   m_PrefabAsset: {fileID: 0}
---- !u!21 &897410144
-Material:
-  serializedVersion: 8
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_Name: UI/RoundedCorners/RoundedCorners
-  m_Shader: {fileID: 4800000, guid: 0bd2ec5d73751e34a814274a454bec41, type: 3}
-  m_Parent: {fileID: 0}
-  m_ModifiedSerializedProperties: 0
-  m_ValidKeywords: []
-  m_InvalidKeywords: []
-  m_LightmapFlags: 4
-  m_EnableInstancingVariants: 0
-  m_DoubleSidedGI: 0
-  m_CustomRenderQueue: -1
-  stringTagMap: {}
-  disabledShaderPasses: []
-  m_LockedProperties: 
-  m_SavedProperties:
-    serializedVersion: 3
-    m_TexEnvs:
-    - _MainTex:
-        m_Texture: {fileID: 0}
-        m_Scale: {x: 1, y: 1}
-        m_Offset: {x: 0, y: 0}
-    m_Ints: []
-    m_Floats:
-    - _ColorMask: 15
-    - _Stencil: 0
-    - _StencilComp: 8
-    - _StencilOp: 0
-    - _StencilReadMask: 255
-    - _StencilWriteMask: 255
-    - _UseUIAlphaClip: 0
-    m_Colors:
-    - _OuterUV: {r: 0, g: 0, b: 1, a: 1}
-    - _WidthHeightRadius: {r: 400, g: 150, b: 80, a: 0}
-  m_BuildTextureStacks: []
 --- !u!1 &1074695449
 GameObject:
   m_ObjectHideFlags: 0
@@ -1696,7 +1708,7 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1074695449}
   m_CullTransparentMesh: 1
---- !u!21 &1163537150
+--- !u!21 &1130675662
 Material:
   serializedVersion: 8
   m_ObjectHideFlags: 0
@@ -2127,8 +2139,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: fe87c0e1cc204ed48ad3b37840f39efc, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  m_Material: {fileID: 897410144}
-  m_Color: {r: 0.99607843, g: 0, b: 0.5953115, a: 1}
+  m_Material: {fileID: 1130675662}
+  m_Color: {r: 0.6745098, g: 0.22352941, b: 0.43137255, a: 1}
   m_RaycastTarget: 1
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
@@ -3035,7 +3047,7 @@ MonoBehaviour:
   boton1: {fileID: 82242594}
   sombraPersonalizadaColor1:
     serializedVersion: 2
-    rgba: 1355612196
+    rgba: 1350916908
   boton2: {fileID: 1453120916}
   sombraPersonalizadaColor2:
     serializedVersion: 2
