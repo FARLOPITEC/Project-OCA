@@ -947,6 +947,7 @@ void Update()
         {
             if (PopupDado.activeSelf)
             {
+
                 block = true;
 
                 FisicasDado();
@@ -954,16 +955,28 @@ void Update()
                 
             }
             else {
+               
                 fichas[jugadores[turnos[jugadorActual]].Ficha].transform.Find("CameraFicha").gameObject.SetActive(false);
                 
                 blockBotonVista = true;
                 PopupDado.SetActive(true);
                 if (Boton3D.activeSelf) popupTablero2D.SetActive(false);
+
             }
 
         }
 
     }
+
+    void ReiniciarCaras()
+    {
+        Cara[] caras = FindObjectsOfType<Cara>();
+        foreach (Cara cara in caras)
+        {
+            cara.TocaSuelo = false;
+        }
+    }
+
 
     void DesactivarCamaras() {
 
@@ -1085,7 +1098,7 @@ void Update()
     }
 
 
-    void DetectarCaraSuperiorDef() {
+    void DetectarCaraSuperiorDef2() {
 
         for (int i = 0; i < caras.Length; i++)
         {
@@ -1099,7 +1112,29 @@ void Update()
         }
         
     }
-  
+
+    void DetectarCaraSuperiorDef()
+    {
+        Cara caraSuperior = null;
+        float mayorAltura = float.MinValue;
+
+        for (int i = 0; i < caras.Length; i++)
+        {
+            float alturaActual = caras[i].transform.position.y; // Obtiene la altura de la cara
+            if (alturaActual > mayorAltura)
+            {
+                mayorAltura = alturaActual;
+                caraSuperior = caras[i]; // Guarda la cara con mayor altura
+            }
+        }
+
+        if (caraSuperior != null)
+        {
+            NumeroActual = caraSuperior.Numero;
+            Debug.Log("El resultado del dado es: " + NumeroActual);
+        }
+    }
+
 
     public void MoverAFicha(int resultadoDado)
     {
@@ -2081,7 +2116,7 @@ void Update()
             popupTurno.SetActive(true);
             yield return new WaitForSeconds(2); // Espera 2 segundos
             popupTurno.SetActive(false);
-
+            ReiniciarCaras();
 
             if (contAutoGuardado >= jugadores.Count) { GuardarPartida(); contAutoGuardado = 0; };
             contAutoGuardado++;
