@@ -11,7 +11,7 @@ public class CartasManager : MonoBehaviour
     public TextAsset archivoCSV;
     public GameObject difuminado; // Opcional, para efectos visuales
     public Button botonMostrarCarta; // Botón para mostrar la carta
-    private bool sombraActiva = false;
+    
 
     private List<string> frases = new List<string>();
     private RectTransform cartaRect;

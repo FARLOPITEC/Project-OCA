@@ -20,11 +20,11 @@ RenderSettings:
   m_FogDensity: 0.01
   m_LinearFogStart: 0
   m_LinearFogEnd: 300
-  m_AmbientSkyColor: {r: 0.212, g: 0.227, b: 0.259, a: 1}
+  m_AmbientSkyColor: {r: 0.29322597, g: 0.3139731, b: 0.35823363, a: 1}
   m_AmbientEquatorColor: {r: 0.114, g: 0.125, b: 0.133, a: 1}
   m_AmbientGroundColor: {r: 0.047, g: 0.043, b: 0.035, a: 1}
   m_AmbientIntensity: 1
-  m_AmbientMode: 0
+  m_AmbientMode: 3
   m_SubtractiveShadowColor: {r: 0.42, g: 0.478, b: 0.627, a: 1}
   m_SkyboxMaterial: {fileID: 10304, guid: 0000000000000000f000000000000000, type: 0}
   m_HaloStrength: 0.5
@@ -215,6 +215,46 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!21 &476073622
+Material:
+  serializedVersion: 8
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_Name: UI/RoundedCorners/RoundedCorners
+  m_Shader: {fileID: 4800000, guid: 0bd2ec5d73751e34a814274a454bec41, type: 3}
+  m_Parent: {fileID: 0}
+  m_ModifiedSerializedProperties: 0
+  m_ValidKeywords: []
+  m_InvalidKeywords: []
+  m_LightmapFlags: 4
+  m_EnableInstancingVariants: 0
+  m_DoubleSidedGI: 0
+  m_CustomRenderQueue: -1
+  stringTagMap: {}
+  disabledShaderPasses: []
+  m_LockedProperties: 
+  m_SavedProperties:
+    serializedVersion: 3
+    m_TexEnvs:
+    - _MainTex:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    m_Ints: []
+    m_Floats:
+    - _ColorMask: 15
+    - _Stencil: 0
+    - _StencilComp: 8
+    - _StencilOp: 0
+    - _StencilReadMask: 255
+    - _StencilWriteMask: 255
+    - _UseUIAlphaClip: 0
+    m_Colors:
+    - _OuterUV: {r: 0, g: 0.0021017978, b: 1, a: 1}
+    - _WidthHeightRadius: {r: 300, g: 300, b: 120, a: 0}
+  m_BuildTextureStacks: []
 --- !u!1 &805115780
 GameObject:
   m_ObjectHideFlags: 0
@@ -328,7 +368,6 @@ GameObject:
   - component: {fileID: 956791355}
   - component: {fileID: 956791357}
   - component: {fileID: 956791356}
-  - component: {fileID: 956791358}
   - component: {fileID: 956791359}
   - component: {fileID: 956791360}
   m_Layer: 5
@@ -369,7 +408,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: fe87c0e1cc204ed48ad3b37840f39efc, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  m_Material: {fileID: 1073440029}
+  m_Material: {fileID: 476073622}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_RaycastTarget: 1
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
@@ -395,18 +434,6 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 956791354}
   m_CullTransparentMesh: 1
---- !u!114 &956791358
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 956791354}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 160e473aa85587f46a762fffc56e68da, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
 --- !u!225 &956791359
 CanvasGroup:
   m_ObjectHideFlags: 0
@@ -433,46 +460,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   radius: 60
   image: {fileID: 956791356}
---- !u!21 &1073440029
-Material:
-  serializedVersion: 8
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_Name: UI/RoundedCorners/RoundedCorners
-  m_Shader: {fileID: 4800000, guid: 0bd2ec5d73751e34a814274a454bec41, type: 3}
-  m_Parent: {fileID: 0}
-  m_ModifiedSerializedProperties: 0
-  m_ValidKeywords: []
-  m_InvalidKeywords: []
-  m_LightmapFlags: 4
-  m_EnableInstancingVariants: 0
-  m_DoubleSidedGI: 0
-  m_CustomRenderQueue: -1
-  stringTagMap: {}
-  disabledShaderPasses: []
-  m_LockedProperties: 
-  m_SavedProperties:
-    serializedVersion: 3
-    m_TexEnvs:
-    - _MainTex:
-        m_Texture: {fileID: 0}
-        m_Scale: {x: 1, y: 1}
-        m_Offset: {x: 0, y: 0}
-    m_Ints: []
-    m_Floats:
-    - _ColorMask: 15
-    - _Stencil: 0
-    - _StencilComp: 8
-    - _StencilOp: 0
-    - _StencilReadMask: 255
-    - _StencilWriteMask: 255
-    - _UseUIAlphaClip: 0
-    m_Colors:
-    - _OuterUV: {r: 0, g: 0.0021017978, b: 1, a: 1}
-    - _WidthHeightRadius: {r: 300, g: 300, b: 120, a: 0}
-  m_BuildTextureStacks: []
 --- !u!1 &1280457496
 GameObject:
   m_ObjectHideFlags: 0
@@ -602,7 +589,6 @@ GameObject:
   - component: {fileID: 1356748862}
   - component: {fileID: 1356748864}
   - component: {fileID: 1356748863}
-  - component: {fileID: 1356748865}
   m_Layer: 5
   m_Name: Fondo
   m_TagString: Untagged
@@ -669,18 +655,6 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1356748861}
   m_CullTransparentMesh: 1
---- !u!114 &1356748865
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1356748861}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 160e473aa85587f46a762fffc56e68da, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
 --- !u!1 &1620500608
 GameObject:
   m_ObjectHideFlags: 0
@@ -691,7 +665,6 @@ GameObject:
   m_Component:
   - component: {fileID: 1620500609}
   - component: {fileID: 1620500610}
-  - component: {fileID: 1620500612}
   m_Layer: 0
   m_Name: Manager
   m_TagString: Untagged
@@ -727,23 +700,11 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   logo: {fileID: 956791354}
-  appName: {fileID: 0}
+  appName: {fileID: 2137184884}
   fadeInDuration: 0.5
   holdDuration: 1.5
   fadeOutDuration: 0.5
   moveDistance: 100
---- !u!114 &1620500612
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1620500608}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 588c136af55f9554e8eee29d6f906d35, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
 --- !u!1 &1952123025
 GameObject:
   m_ObjectHideFlags: 0
