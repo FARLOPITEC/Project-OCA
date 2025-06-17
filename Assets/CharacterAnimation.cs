@@ -16,18 +16,22 @@ public class CharacterAnimation : MonoBehaviour
     public string[] dialogueLines;           // Líneas de texto
     public float textSpeed = 0.05f;          // Velocidad del texto
     public float slideDuration = 0.5f;       // Duración de la animación
+    public float waitBetweenLines = 15f;     // Tiempo entre frases
 
     private int currentLine = 0;
     private bool isTyping = false;
     private Vector3 originalCharPos;
+    private Vector3 originalBubblePos;
 
     void Start()
     {
-        // Guardar la posición final del personaje
+        // Guardar posiciones originales
         originalCharPos = characterImage.rectTransform.anchoredPosition;
+        originalBubblePos = bubbleImage.rectTransform.anchoredPosition;
 
-        // Colocarlo fuera de pantalla a la izquierda
+        // Colocar ambos fuera de pantalla a la izquierda
         characterImage.rectTransform.anchoredPosition = new Vector2(-Screen.width, originalCharPos.y);
+        bubbleImage.rectTransform.anchoredPosition = new Vector2(-Screen.width, originalBubblePos.y);
 
         characterImage.gameObject.SetActive(false);
         bubbleImage.gameObject.SetActive(false);
@@ -37,22 +41,32 @@ public class CharacterAnimation : MonoBehaviour
 
     public IEnumerator StartDialogue()
     {
-        // Activar imágenes
+        // Activar personaje y bocadillo al mismo tiempo (pero sin texto aún)
         characterImage.gameObject.SetActive(true);
         bubbleImage.gameObject.SetActive(true);
+        dialogueText.text = ""; // Asegurarse de que no se muestre texto antes de tiempo
 
-        // Deslizar personaje desde la izquierda
+        // Esperar a que termine el movimiento del personaje y bocadillo
         yield return StartCoroutine(SlideInCharacter());
 
-        // Mostrar texto
-        yield return StartCoroutine(TypeLine(dialogueLines[currentLine]));
+        // Mostrar todas las líneas en bucle infinito
+        while (true)
+        {
+            yield return StartCoroutine(TypeLine(dialogueLines[currentLine]));
+
+            currentLine = (currentLine + 1) % dialogueLines.Length;
+
+            yield return new WaitForSeconds(waitBetweenLines);
+        }
     }
 
     IEnumerator SlideInCharacter()
     {
         float elapsed = 0f;
-        Vector2 startPos = characterImage.rectTransform.anchoredPosition;
-        Vector2 endPos = originalCharPos;
+        Vector2 startCharPos = characterImage.rectTransform.anchoredPosition;
+        Vector2 startBubblePos = bubbleImage.rectTransform.anchoredPosition;
+        Vector2 endCharPos = originalCharPos;
+        Vector2 endBubblePos = originalBubblePos;
 
         float oscillationAmplitude = 10f; // cuánto se mueve arriba y abajo (en píxeles)
         float oscillationFrequency = 5f;  // velocidad del balanceo
@@ -63,18 +77,22 @@ public class CharacterAnimation : MonoBehaviour
             float t = Mathf.Clamp01(elapsed / slideDuration);
 
             // Movimiento horizontal lineal
-            float posX = Mathf.Lerp(startPos.x, endPos.x, t);
+            float posXChar = Mathf.Lerp(startCharPos.x, endCharPos.x, t);
+            float posXBubble = Mathf.Lerp(startBubblePos.x, endBubblePos.x, t);
 
             // Movimiento vertical oscilatorio (senoidal)
-            float posY = originalCharPos.y + Mathf.Sin(t * Mathf.PI * oscillationFrequency) * oscillationAmplitude;
+            float posYChar = originalCharPos.y + Mathf.Sin(t * Mathf.PI * oscillationFrequency) * oscillationAmplitude;
+            float posYBubble = originalBubblePos.y + Mathf.Sin(t * Mathf.PI * oscillationFrequency) * oscillationAmplitude;
 
-            characterImage.rectTransform.anchoredPosition = new Vector2(posX, posY);
+            characterImage.rectTransform.anchoredPosition = new Vector2(posXChar, posYChar);
+            bubbleImage.rectTransform.anchoredPosition = new Vector2(posXBubble, posYBubble);
 
             yield return null;
         }
 
-        // Al final, asegurar posición exacta sin oscilación
-        characterImage.rectTransform.anchoredPosition = endPos;
+        // Asegurar posición exacta al terminar
+        characterImage.rectTransform.anchoredPosition = endCharPos;
+        bubbleImage.rectTransform.anchoredPosition = endBubblePos;
     }
 
     IEnumerator TypeLine(string line)
@@ -89,31 +107,5 @@ public class CharacterAnimation : MonoBehaviour
         }
 
         isTyping = false;
-    }
-
-    public void ShowNextLine()
-    {
-        if (isTyping) return;
-
-        currentLine++;
-
-        if (currentLine < dialogueLines.Length)
-        {
-            StartCoroutine(TypeLine(dialogueLines[currentLine]));
-        }
-        else
-        {
-            // Fin del diálogo
-            characterImage.gameObject.SetActive(false);
-            bubbleImage.gameObject.SetActive(false);
-        }
-    }
-
-    void Update()
-    {
-        if (Input.GetKeyDown(KeyCode.Space))
-        {
-            ShowNextLine();
-        }
     }
 }

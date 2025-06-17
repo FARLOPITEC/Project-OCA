@@ -2141,17 +2141,17 @@ void Update()
 
     //Crear Minijuegos
     void CrearMinijuegos() {
-        MinijuegoTablero miju1 = new MinijuegoTablero("Quien es mas probable", "#F700FF", "CSV/MasProbable");
-        MinijuegoTablero miju2 = new MinijuegoTablero("Yo nunca", "#00FF10", "CSV/YoNunca");
+        MinijuegoTablero miju1 = new MinijuegoTablero("Quien es mas probable", "#DD34E2", "CSV/MasProbable");
+        MinijuegoTablero miju2 = new MinijuegoTablero("Yo nunca", "#00BC0C", "CSV/YoNunca");
         MinijuegoTablero miju3 = new MinijuegoTablero("Verdad", "#2E00FF", "CSV/verdad");
-        MinijuegoTablero miju4 = new MinijuegoTablero("3 Palabras", "#1F552B", "CSV/3Palabras");
+        MinijuegoTablero miju4 = new MinijuegoTablero("3 Palabras", "#1F552A", "CSV/3Palabras");
         MinijuegoTablero miju5 = new MinijuegoTablero("Reto", "#00FF81", "CSV/reto");
         MinijuegoTablero miju6 = new MinijuegoTablero("Beber", "#FFF700", "CSV/beber");
-        MinijuegoTablero miju7 = new MinijuegoTablero("Quien fue", "#FFA200", "CSV/QuienFue");
-        MinijuegoTablero miju8 = new MinijuegoTablero("Quien es mas probable +18", "#F700FF", "CSV/MasProbable18");
-        MinijuegoTablero miju9 = new MinijuegoTablero("Yo nunca +18", "#00FF10", "CSV/YoNunca18");
+        MinijuegoTablero miju7 = new MinijuegoTablero("Quien fue", "#FEA200", "CSV/QuienFue");
+        MinijuegoTablero miju8 = new MinijuegoTablero("Quien es mas probable +18", "#DD34E2", "CSV/MasProbable18");
+        MinijuegoTablero miju9 = new MinijuegoTablero("Yo nunca +18", "#00BC0C", "CSV/YoNunca18");
         MinijuegoTablero miju10 = new MinijuegoTablero("Verdad +18", "#2E00FF", "CSV/verdad18");
-        MinijuegoTablero miju11 = new MinijuegoTablero("3 Palabras +18", "#1F552B", "CSV/3Palabras18");
+        MinijuegoTablero miju11 = new MinijuegoTablero("3 Palabras +18", "#1F552A", "CSV/3Palabras18");
         MinijuegoTablero miju12 = new MinijuegoTablero("Hot", "#FF0000", "CSV/hot");
 
         miniJuegos.Add(miju1.nombre, miju1);
