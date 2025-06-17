@@ -47,6 +47,7 @@ public class VentanaTablero3D : MonoBehaviour
     int contador = 0;
 
     public List<Material> materiales;
+
     List<ColorJugadores> coloresJu;
 
     Dictionary<string, Jugador3D> jugadores=new Dictionary<string, Jugador3D>();
@@ -67,7 +68,9 @@ public class VentanaTablero3D : MonoBehaviour
         //Imagen en partes ---------------------------------------------------
 
 
-    public Texture2D[] imagenesTableros; // La imagen completa
+    public Texture2D[] imagenesTableros;
+    public List<Material> skybox;
+    // La imagen completa
     int numeroTablero;
 
 
@@ -176,9 +179,15 @@ public class VentanaTablero3D : MonoBehaviour
     // Start se ejecuta después de Awake y OnEnable.
     void Start()
     {
+        ElegirSkybox();
         popupSalir.SetActive(false);
         fondoDifuminado.SetActive(false);
 
+        jugadores = new Dictionary<string, Jugador3D>();
+        CargarJugadores();
+        CargarColores();
+        PersonalizarFicha();
+        VerificarFichasAlIniciarTurno(jugadorActual);
         // Configuración de acuerdo a la escena anterior.
         if (DatosEscena.EscenaAnterior.Equals("MenuUsuarios"))
         {
@@ -201,12 +210,10 @@ public class VentanaTablero3D : MonoBehaviour
         // Lienzo
         CrearLienzo();
 
-        jugadores = new Dictionary<string, Jugador3D>();
-        CargarJugadores();
-        CargarColores();
+
 
         // Ficha y Jugadores
-        PersonalizarFicha();
+
         MarcoJugador();
 
         // Tablero 2D
@@ -1408,7 +1415,49 @@ void Update()
 
 
     }
- 
+
+    void ElegirSkybox() {
+        if (numeroTablero==0){
+            AsignarSkybox(skybox[0]);
+        } else if (numeroTablero == 1)
+        {
+            AsignarSkybox(skybox[2]);
+        } else if (numeroTablero == 2)
+        {
+            AsignarSkybox(skybox[0]);
+        } else if (numeroTablero == 3)
+        {
+            AsignarSkybox(skybox[1]);
+        } else {
+            AsignarSkybox(skybox[3]);
+        }
+    }
+
+    void AsignarSkybox(Material skyboxMaterial)
+    {
+        if (skyboxMaterial != null)
+        {
+            // Asignar el nuevo material del skybox.
+            RenderSettings.skybox = skyboxMaterial;
+
+            // Quitar cualquier cubemap fijo para forzar que se use el skybox actual en los reflejos.
+            RenderSettings.customReflection = null;
+
+            // Actualiza la iluminación global y el Default Reflection derivado del skybox.
+            DynamicGI.UpdateEnvironment();
+
+            // Si tienes Reflection Probes en la escena, forzamos su actualización para que capten el nuevo entorno.
+            foreach (ReflectionProbe probe in FindObjectsOfType<ReflectionProbe>())
+            {
+                probe.RenderProbe();
+            }
+        }
+        else
+        {
+            Debug.LogWarning("El material del skybox es nulo.");
+        }
+    }
+
     void AsignarNumerosCasillas(int posicionCasilla,Texture2D cellTexture)
     {
         //Debug.Log($"filas * columnas: {filas * columnas} - NumeroCasilla {posicionCasilla}");
@@ -1910,6 +1959,8 @@ void Update()
 
     IEnumerator MovimientoHada()
     {
+        
+
         Camera camaraComponente = camaraPopup.GetComponent<Camera>();
         if (camaraComponente != null)
         {
@@ -2020,7 +2071,7 @@ void Update()
 
     IEnumerator ActivarPopupTurno()
     {
- 
+        block = true;
         if (jugadores[turnos[jugadorActual]].Posicion != (filas * columnas) - 1) {
             ColorUtility.TryParseHtmlString(jugadores[turnos[jugadorActual]].ColorIcono, out Color color2);
 
@@ -2035,6 +2086,7 @@ void Update()
             if (contAutoGuardado >= jugadores.Count) { GuardarPartida(); contAutoGuardado = 0; };
             contAutoGuardado++;
         }
+        block = false;
     }
     void MostrarPopupTurno()
     {
